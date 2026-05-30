@@ -7,11 +7,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // En Vercel Postgres (Neon): DATABASE_URL = POSTGRES_PRISMA_URL (pooled)
-  //                            DIRECT_URL   = POSTGRES_URL_NON_POOLING (directa, para migraciones)
-  // En local puedes apuntar ambas a la misma cadena de conexión.
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // Nombres de variable que crea la integración Neon ↔ Vercel:
+  //   POSTGRES_PRISMA_URL      → conexión con pooling (runtime serverless)
+  //   POSTGRES_URL_NON_POOLING → conexión directa (migraciones)
+  // En local apunta ambas a tu cadena de conexión (ver .env.example).
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 enum GlobalRole {
