@@ -33,6 +33,9 @@ export function AppHeader({
           <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
             Inicio
           </Link>
+          <Link href="/recipes" className="text-muted-foreground hover:text-foreground">
+            Recetas
+          </Link>
           {isAdmin && (
             <Link href="/admin" className="text-muted-foreground hover:text-foreground">
               Administración

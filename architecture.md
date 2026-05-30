@@ -5,10 +5,16 @@ estructura, el modelo de datos o las decisiones de diseño.
 
 ## Visión general
 
-App web de gestión doméstica familiar para un grupo cerrado de hogares (≈6-7). El
-**incremento 1** implementa solo la **gestión de usuarios**: autenticación, cambio de
-contraseña forzado y panel de administración (hogares, sims y pertenencias). Los módulos
-funcionales (gastos, compras, inventario, comidas) se añadirán en incrementos posteriores.
+App web de gestión doméstica familiar para un grupo cerrado de hogares (≈6-7).
+
+- **Incremento 1** — **gestión de usuarios**: autenticación, cambio de contraseña forzado y
+  panel de administración (hogares, sims y pertenencias).
+- **Incremento 2** — **catálogo de recetas**: recetas con ingredientes (catálogo maestro
+  normalizado) y pasos, gestionables por cualquier usuario, y selección de recetas por
+  hogar (`HouseholdRecipe`) como base para la futura generación de plan mensual y cesta.
+
+Los módulos de plan de comidas, cesta de la compra, gastos e inventario llegarán en
+incrementos posteriores.
 
 ## Stack
 
@@ -28,7 +34,9 @@ funcionales (gastos, compras, inventario, comidas) se añadirán en incrementos 
 home_dms/
 ├── prisma/
 │   ├── schema.prisma         # Modelos Sim, Household, Membership + enum GlobalRole
-│   └── seed.ts               # Crea el administrador inicial (configurable por env)
+│   ├── seed.ts               # Siembra admin + catálogo de ingredientes + recetas (idempotente)
+│   ├── recipes-data.ts       # Datos del seed de recetas (INGREDIENTS, RECIPES)
+│   └── migrations/           # Migraciones SQL (init, recipes)
 ├── app/
 │   ├── layout.tsx            # Layout raíz (fuentes, Toaster)
 │   ├── page.tsx              # "/" → redirige a /dashboard
@@ -38,6 +46,11 @@ home_dms/
 │   └── (app)/                # Grupo protegido (requiere sesión)
 │       ├── layout.tsx        # Cabecera + guard de sesión y mustChangePassword
 │       ├── dashboard/        # Dashboard del sim (saludo + sus hogares)
+│       ├── recipes/          # Catálogo de recetas (todos los usuarios)
+│       │   ├── page.tsx      # Listado + buscador
+│       │   ├── new/          # Crear receta
+│       │   ├── [id]/         # Detalle (+ /edit)
+│       │   └── seleccion/    # "Mi menú": selección de recetas por hogar
 │       └── admin/            # Solo ADMIN
 │           ├── layout.tsx    # Guard requireAdmin + subnav
 │           ├── page.tsx      # Resumen (contadores)
@@ -46,12 +59,15 @@ home_dms/
 ├── components/
 │   ├── app-header.tsx        # Cabecera con navegación + logout
 │   ├── admin/                # households-manager.tsx, sims-manager.tsx (componentes cliente)
+│   ├── recipes/              # recipe-form, recipe-list, ingredient-combobox, etc.
 │   └── ui/                   # Componentes shadcn/ui
 ├── lib/
 │   ├── prisma.ts             # Singleton de PrismaClient
 │   ├── password.ts           # generateTempPassword / hash / verify
-│   ├── auth-helpers.ts       # requireSession / requireAdmin
-│   └── actions/              # Server actions: auth, households, sims, memberships
+│   ├── auth-helpers.ts       # requireSession / requireAdmin / canManageRecipe
+│   ├── validation/recipe.ts  # Schemas zod + enums/labels de recetas (Unit, categorías)
+│   └── actions/              # Server actions: auth, households, sims, memberships,
+│                             #   recipes, ingredients, household-recipes
 ├── types/next-auth.d.ts      # Augmentación de tipos de sesión/JWT
 ├── auth.config.ts            # Config Auth.js "edge-safe" (sin Prisma/bcrypt) + callbacks
 ├── auth.ts                   # Instancia NextAuth con proveedor credentials
@@ -84,6 +100,38 @@ createdAt     DateTime                 householdId String (FK→Household, casca
   `(simId, householdId)` garantiza que un sim no se duplique en un hogar. Borrado en
   cascada al eliminar el sim o el hogar.
 
+### Modelo de recetas (incremento 2)
+
+```
+Recipe                                   Ingredient (catálogo maestro)
+──────────────────────────────          ──────────────────────────────
+id            String (cuid, PK)          id          String (cuid, PK)
+name          String                     name        String (único)
+description   String?                    category    IngredientCategory
+steps         String[]  (pasos)          defaultUnit Unit
+imageUrl      String?
+servings      Int (raciones base)        RecipeIngredient (N:M Recipe↔Ingredient)
+prepMinutes   Int?                       ──────────────────────────────
+suitableForLunch  Boolean                recipeId     FK→Recipe (cascade)
+suitableForDinner Boolean                ingredientId FK→Ingredient (cascade)
+isActive      Boolean (def. true)        quantity     Float (para `servings` base)
+createdById   String? (FK→Sim, SetNull)  unit         Unit
+createdAt     DateTime                    note         String?
+                                          PK compuesta (recipeId, ingredientId)
+HouseholdRecipe (N:M Household↔Recipe)
+──────────────────────────────
+householdId FK→Household (cascade)
+recipeId    FK→Recipe (cascade)
+addedAt     DateTime
+PK compuesta (householdId, recipeId)
+```
+
+- **Unit / IngredientCategory**: enums. `AL_GUSTO` marca cantidades que no escalan en la
+  futura cesta. `category` agrupará la cesta por secciones del súper.
+- **RecipeIngredient**: cantidades referidas a `Recipe.servings`; la cesta se escalará por
+  el nº de miembros del hogar (`miembros / servings`).
+- **HouseholdRecipe**: qué recetas ha activado cada hogar para entrar en su plan.
+
 ## Decisiones de diseño
 
 - **Multi-hogar vía Membership, sin roles de hogar.** Un sim puede pertenecer a varios
@@ -113,6 +161,40 @@ createdAt     DateTime                 householdId String (FK→Household, casca
   alfabeto sin caracteres ambiguos. Tanto al crear un sim como al regenerar su contraseña,
   la clave en claro se muestra **una sola vez** en un diálogo con botón de copiar; el admin
   la comparte manualmente (p. ej. WhatsApp). Nunca se persiste ni se envía automáticamente.
+
+### Decisiones del incremento 2 (recetas)
+
+- **Catálogo de recetas global + selección por hogar.** Todas las recetas son visibles para
+  todos; un hogar solo las usará en su plan si las activa vía `HouseholdRecipe`. Mismo
+  patrón N:M que `Membership`.
+
+- **Ingredientes normalizados (catálogo maestro), no texto libre.** Permite que la futura
+  cesta sume cantidades del mismo ingrediente entre recetas y las agrupe por sección. En el
+  formulario, el ingrediente se elige con un *combobox* que busca en el catálogo y permite
+  **crear uno nuevo al vuelo** (con categoría y unidad por defecto).
+
+- **Cualquier usuario crea recetas; editar/borrar solo el creador o un admin.** `Recipe`
+  lleva `createdById` (FK→Sim con `onDelete: SetNull`, para que la receta sobreviva al
+  borrado de su autor). Autorización centralizada en `canManageRecipe(user, recipe)`.
+
+- **Pasos como `String[]`** (array nativo de Postgres), no entidad aparte: pasos numerados y
+  reordenables en el formulario, sin el coste de una tabla extra. Migrar a entidad
+  `RecipeStep` (foto/tiempo por paso) sería sencillo si se necesitara.
+
+- **"Plato único vs primero+segundo" NO es de la receta.** La receta es siempre un plato;
+  esa elección será una característica del *plan* (incremento futuro).
+
+- **Escalado por raciones diferido.** Se persiste `servings` + cantidades por ración, pero
+  el cálculo de la cesta (`cantidad × miembros / servings`) se implementará con el módulo de
+  cesta. `AL_GUSTO` no escalará.
+
+- **Edición de receta = reemplazo de ingredientes.** `updateRecipe` borra los
+  `RecipeIngredient` y los recrea en una transacción (más simple y robusto que un diff).
+
+- **Selección por hogar con selector de hogar activo.** Como un sim puede pertenecer a
+  varios hogares, `/recipes/seleccion` lleva un selector (limitado a sus hogares) vía query
+  param `?household=`. Es el primer punto donde la UI necesita "contexto de hogar"; el plan
+  y la cesta probablemente eleven esto a un selector global.
 
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las

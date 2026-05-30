@@ -1,5 +1,7 @@
 // Prisma schema — HOME DMS
 // Incremento 1: gestión de usuarios (sims), hogares y pertenencias.
+// Incremento 2: catálogo de recetas (Recipe, Ingredient, RecipeIngredient)
+//               y selección de recetas por hogar (HouseholdRecipe).
 
 generator client {
   provider = "prisma-client-js"
@@ -32,15 +34,17 @@ model Sim {
   createdAt          DateTime     @default(now())
 
   memberships        Membership[]
+  createdRecipes     Recipe[]     @relation("RecipeCreatedBy")
 }
 
 /// Un hogar al que pertenecen uno o varios sims.
 model Household {
-  id          String       @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime          @default(now())
 
   memberships Membership[]
+  recipes     HouseholdRecipe[]
 }
 
 /// Relación N:M entre Sim y Household. Sin rol dentro del hogar.
@@ -53,4 +57,98 @@ model Membership {
   household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
   @@id([simId, householdId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Incremento 2 — Recetas
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Unidad de medida de un ingrediente. AL_GUSTO no se escala en la cesta.
+enum Unit {
+  GRAMO
+  KILOGRAMO
+  MILILITRO
+  LITRO
+  UNIDAD
+  CUCHARADA
+  CUCHARADITA
+  PIZCA
+  DIENTE
+  LATA
+  MANOJO
+  AL_GUSTO
+}
+
+/// Categoría del ingrediente; sirve para agrupar la futura cesta por secciones.
+enum IngredientCategory {
+  VERDURA
+  FRUTA
+  CARNE
+  PESCADO
+  LACTEO
+  HUEVOS
+  PANADERIA
+  DESPENSA
+  CONGELADO
+  BEBIDA
+  CONDIMENTO
+  OTRO
+}
+
+/// Catálogo maestro de ingredientes (normalizado, para poder agregar la cesta).
+model Ingredient {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  category    IngredientCategory @default(OTRO)
+  defaultUnit Unit               @default(UNIDAD)
+
+  recipeIngredients RecipeIngredient[]
+}
+
+/// Una receta = un plato. El catálogo es global (visible para todos los hogares);
+/// cada hogar elige cuáles usa en sus planes vía HouseholdRecipe.
+model Recipe {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  steps            String[] // pasos del proceso, en orden
+  imageUrl         String?
+  servings         Int      @default(2) // raciones base de las cantidades
+  prepMinutes      Int?
+  suitableForLunch Boolean  @default(true)
+  suitableForDinner Boolean @default(true)
+  isActive         Boolean  @default(true)
+  createdById      String?
+  createdAt        DateTime @default(now())
+
+  // Si se borra el autor, la receta permanece en el catálogo común (createdById → null).
+  createdBy   Sim?               @relation("RecipeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  ingredients RecipeIngredient[]
+  households  HouseholdRecipe[]
+}
+
+/// Relación receta ↔ ingrediente con la cantidad para las `servings` base.
+model RecipeIngredient {
+  recipeId     String
+  ingredientId String
+  quantity     Float
+  unit         Unit
+  note         String?
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, ingredientId])
+}
+
+/// Recetas que un hogar ha seleccionado para entrar en la generación de su plan.
+model HouseholdRecipe {
+  householdId String
+  recipeId    String
+  addedAt     DateTime @default(now())
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  recipe    Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([householdId, recipeId])
 }

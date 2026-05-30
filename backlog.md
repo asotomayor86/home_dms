@@ -32,12 +32,34 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Migración inicial Prisma + deploy a Vercel/Neon                      | Hecha  | 2026-05-30 | 2026-05-30        |
 | Build aplica migrate deploy + db seed (admin inicial)                | Hecha  | 2026-05-30 | 2026-05-30        |
 
+## Incremento 2 — Catálogo de recetas
+
+| Tarea                                                                 | Estado | Fecha alta | Fecha realización |
+| --------------------------------------------------------------------- | ------ | ---------- | ----------------- |
+| Modelo Prisma: Recipe, Ingredient, RecipeIngredient, HouseholdRecipe  | Hecha  | 2026-05-30 | 2026-05-30        |
+| Enums Unit e IngredientCategory                                       | Hecha  | 2026-05-30 | 2026-05-30        |
+| Migración de recetas (offline diff) + cliente regenerado             | Hecha  | 2026-05-30 | 2026-05-30        |
+| Seed: catálogo de ingredientes + 12 recetas españolas con pasos       | Hecha  | 2026-05-30 | 2026-05-30        |
+| Validación zod compartida (recipe.ts) + enums/labels                 | Hecha  | 2026-05-30 | 2026-05-30        |
+| Helper de autorización canManageRecipe                               | Hecha  | 2026-05-30 | 2026-05-30        |
+| Server actions de recetas (crear/editar/borrar/activar)              | Hecha  | 2026-05-30 | 2026-05-30        |
+| Server actions de ingredientes (listar/crear)                        | Hecha  | 2026-05-30 | 2026-05-30        |
+| Server actions de selección por hogar (HouseholdRecipe)              | Hecha  | 2026-05-30 | 2026-05-30        |
+| Combobox de ingredientes con creación al vuelo                       | Hecha  | 2026-05-30 | 2026-05-30        |
+| Formulario de receta (filas dinámicas de ingredientes y pasos)       | Hecha  | 2026-05-30 | 2026-05-30        |
+| Listado /recipes con buscador + enlace en cabecera                   | Hecha  | 2026-05-30 | 2026-05-30        |
+| Detalle /recipes/[id] con acciones según permisos                    | Hecha  | 2026-05-30 | 2026-05-30        |
+| Crear/editar receta (/new, /[id]/edit)                               | Hecha  | 2026-05-30 | 2026-05-30        |
+| "Mi menú" /recipes/seleccion con selector de hogar                   | Hecha  | 2026-05-30 | 2026-05-30        |
+| Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-30 | 2026-05-30        |
+
 ## Próximos incrementos (pendientes de planificar)
 
 | Tarea                                                       | Estado    | Fecha alta | Fecha realización |
 | ----------------------------------------------------------- | --------- | ---------- | ----------------- |
+| Generación automática de plan mensual de comidas/cenas por hogar | Pendiente | 2026-05-30 |                   |
+| Cesta de la compra (agregación + escalado por hogar)       | Pendiente | 2026-05-30 |                   |
 | Edición de perfil del sim (nombre visible, avatar)         | Pendiente | 2026-05-30 |                   |
 | Módulo de gastos                                            | Pendiente | 2026-05-30 |                   |
 | Módulo de compras                                          | Pendiente | 2026-05-30 |                   |
 | Módulo de inventario                                       | Pendiente | 2026-05-30 |                   |
-| Módulo de planificación de comidas                         | Pendiente | 2026-05-30 |                   |
