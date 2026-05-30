@@ -7,7 +7,7 @@ export default async function ChangePasswordPage() {
   const forced = session.user.mustChangePassword;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Cambia tu contraseña</CardTitle>

@@ -24,7 +24,7 @@ export function AppHeader({
   isAdmin: boolean;
 }) {
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-background/70 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
         <nav className="flex items-center gap-6">
           <Link

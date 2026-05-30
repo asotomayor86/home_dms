@@ -83,6 +83,12 @@
   --sidebar-accent-foreground: oklch(0.18 0.004 60);
   --sidebar-border: oklch(0.86 0.004 80);
   --sidebar-ring: oklch(0.18 0.004 60);
+
+  /* Fondo distinto por sección (familia marfil, con matices de color). */
+  --page-auth: oklch(0.94 0.03 65);        /* arena cálida */
+  --page-dashboard: oklch(0.95 0.03 150);  /* salvia */
+  --page-recipes: oklch(0.945 0.035 45);   /* crema terracota */
+  --page-admin: oklch(0.94 0.028 255);     /* lavanda fría */
 }
 
 .dark {
@@ -124,15 +130,21 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     letter-spacing: 0.01em;
+    /* El color de fondo lo fija el atributo data-page (ver más abajo).
+       Por defecto, marfil base; transición suave al navegar entre secciones. */
+    background-color: var(--page-bg, var(--background));
+    transition: background-color 0.5s ease;
   }
   html {
     @apply font-sans;
+    background-color: var(--background);
   }
-  /* Titulares en estilo editorial: peso medio y tracking ligeramente abierto. */
-  h1, h2, h3 {
-    letter-spacing: -0.01em;
+  /* Titulares en estilo editorial: SIEMPRE en mayúsculas, tracking abierto. */
+  h1, h2, h3, h4 {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 }
 
@@ -145,4 +157,19 @@
     font-size: 0.7rem;
     font-weight: 500;
   }
+}
+
+/* Fondo por sección: el body recibe data-page="..." desde un componente cliente
+   según la ruta. Cada sección tiñe el fondo dentro de la familia marfil. */
+body[data-page="auth"] {
+  --page-bg: var(--page-auth);
+}
+body[data-page="dashboard"] {
+  --page-bg: var(--page-dashboard);
+}
+body[data-page="recipes"] {
+  --page-bg: var(--page-recipes);
+}
+body[data-page="admin"] {
+  --page-bg: var(--page-admin);
 }
