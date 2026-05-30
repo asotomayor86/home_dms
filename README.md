@@ -69,26 +69,23 @@ decisiones de diseño, y [backlog.md](backlog.md) para el estado de las tareas.
 
 1. **Sube el repo a GitHub** e impórtalo en Vercel (New Project → Import).
 2. **Crea la base de datos**: en el proyecto de Vercel → pestaña **Storage** →
-   *Create Database* → **Postgres** (Neon). Al vincularla, Vercel inyecta variables como
-   `POSTGRES_PRISMA_URL` y `POSTGRES_URL_NON_POOLING`.
-3. **Configura las variables de entorno** del proyecto (Settings → Environment Variables):
-   - `DATABASE_URL`  = valor de `POSTGRES_PRISMA_URL`  (con pooling)
-   - `DIRECT_URL`    = valor de `POSTGRES_URL_NON_POOLING`  (directa, para migraciones)
+   *Create Database* → **Postgres** (Neon). Al vincularla, Vercel inyecta automáticamente
+   `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, etc. (como variables *Encrypted*).
+   El `schema.prisma` ya usa esos nombres, así que **no hay que configurar nada de la BD a
+   mano**.
+3. **Configura el resto de variables** (Settings → Environment Variables):
    - `AUTH_SECRET`   = un secreto aleatorio (`npx auth secret`)
-   - *(opcional)* `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_DISPLAYNAME`
-4. **Aplica las migraciones** contra la base de datos de Vercel. Lo más cómodo es hacerlo
-   desde tu máquina apuntando a la BD de producción (usa la cadena *non-pooling* en
-   `DIRECT_URL`):
+   - *(opcional, para el admin inicial)* `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`,
+     `SEED_ADMIN_DISPLAYNAME`
+4. **Migración y seed automáticos en el build.** El script `build` ejecuta
+   `prisma generate && prisma migrate deploy && prisma db seed && next build`. Es decir:
+   en cada despliegue se aplican las migraciones pendientes y se asegura el admin inicial
+   (el seed es *create-only*: si el admin ya existe, no lo toca).
+5. **Despliega**: cada push a la rama principal genera un despliegue.
 
-   ```bash
-   npm run db:deploy
-   npm run db:seed
-   ```
-
-   > Puedes obtener las cadenas con `vercel env pull .env.production.local` (CLI de Vercel)
-   > y cargarlas antes de ejecutar los comandos.
-5. **Despliega**: cada push a la rama principal genera un despliegue. El `build` ejecuta
-   `prisma generate` automáticamente.
+   > Nota: las variables de la BD que crea Neon son *Encrypted* y no se pueden descargar
+   > con `vercel env pull` (vienen vacías). Por eso la migración se ejecuta **dentro del
+   > build de Vercel** (donde sí están disponibles), en lugar de desde tu máquina.
 
 ### Notas
 

@@ -28,6 +28,9 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | README con instrucciones de despliegue en Vercel + Postgres          | Hecha  | 2026-05-30 | 2026-05-30        |
 | `architecture.md` y `backlog.md`                                     | Hecha  | 2026-05-30 | 2026-05-30        |
 | Inicializar git                                                      | Hecha  | 2026-05-30 | 2026-05-30        |
+| Push a GitHub (asotomayor86/home_dms)                                | Hecha  | 2026-05-30 | 2026-05-30        |
+| Migración inicial Prisma + deploy a Vercel/Neon                      | Hecha  | 2026-05-30 | 2026-05-30        |
+| Build aplica migrate deploy + db seed (admin inicial)                | Hecha  | 2026-05-30 | 2026-05-30        |
 
 ## Próximos incrementos (pendientes de planificar)
 

@@ -129,7 +129,17 @@ createdAt     DateTime                 householdId String (FK→Household, casca
 
 | Variable             | Uso                                                            |
 | -------------------- | -------------------------------------------------------------- |
-| `DATABASE_URL`       | Conexión Postgres con pooling (en Vercel = `POSTGRES_PRISMA_URL`) |
-| `DIRECT_URL`         | Conexión directa para migraciones (= `POSTGRES_URL_NON_POOLING`) |
-| `AUTH_SECRET`        | Secreto de Auth.js para firmar el JWT                          |
-| `SEED_ADMIN_*`       | Credenciales del admin inicial (opcional; ver `prisma/seed.ts`)|
+| `POSTGRES_PRISMA_URL`      | Conexión Postgres con pooling (la inyecta Neon en Vercel) |
+| `POSTGRES_URL_NON_POOLING` | Conexión directa para migraciones (la inyecta Neon)       |
+| `AUTH_SECRET`              | Secreto de Auth.js para firmar el JWT                     |
+| `SEED_ADMIN_*`             | Credenciales del admin inicial (opcional; ver `prisma/seed.ts`)|
+
+### Despliegue: migración y seed en el build
+
+Las variables de BD que crea la integración Neon ↔ Vercel son *Encrypted* y **no se pueden
+descargar** (`vercel env pull` las devuelve vacías). Por eso el `build` aplica la migración
+y el seed dentro del propio entorno de Vercel:
+`prisma generate && prisma migrate deploy && prisma db seed && next build`. El seed es
+*create-only* (no pisa la contraseña del admin si ya existe), de modo que es idempotente
+entre despliegues. Las páginas que tocan la BD son `force-dynamic`, así que el build no
+necesita la BD para `next build` (solo lo necesitan `migrate deploy`/`db seed`).
