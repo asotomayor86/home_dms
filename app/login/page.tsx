@@ -3,11 +3,15 @@ import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">HOME DMS</CardTitle>
-          <CardDescription>Inicia sesión con tu usuario</CardDescription>
+          <CardTitle className="text-2xl font-semibold uppercase tracking-[0.2em]">
+            HOME DMS
+          </CardTitle>
+          <CardDescription className="eyebrow mt-1 normal-case tracking-[0.18em]">
+            Gestión doméstica
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />

@@ -25,19 +25,31 @@ export function AppHeader({
 }) {
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/dashboard" className="font-semibold">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
+        <nav className="flex items-center gap-6">
+          <Link
+            href="/dashboard"
+            className="text-base font-semibold uppercase tracking-[0.2em]"
+          >
             HOME DMS
           </Link>
-          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+          <Link
+            href="/dashboard"
+            className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
+          >
             Inicio
           </Link>
-          <Link href="/recipes" className="text-muted-foreground hover:text-foreground">
+          <Link
+            href="/recipes"
+            className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
+          >
             Recetas
           </Link>
           {isAdmin && (
-            <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+            <Link
+              href="/admin"
+              className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
+            >
               Administración
             </Link>
           )}
