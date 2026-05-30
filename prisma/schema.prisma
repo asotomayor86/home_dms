@@ -1,0 +1,55 @@
+// Prisma schema — HOME DMS
+// Incremento 1: gestión de usuarios (sims), hogares y pertenencias.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // En Vercel Postgres (Neon): DATABASE_URL = POSTGRES_PRISMA_URL (pooled)
+  //                            DIRECT_URL   = POSTGRES_URL_NON_POOLING (directa, para migraciones)
+  // En local puedes apuntar ambas a la misma cadena de conexión.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum GlobalRole {
+  ADMIN
+  USER
+}
+
+/// Un "sim" es una cuenta de persona dentro de la app (no hay email en ningún sitio).
+model Sim {
+  id                 String       @id @default(cuid())
+  username           String       @unique
+  passwordHash       String
+  displayName        String
+  avatar             String?
+  globalRole         GlobalRole   @default(USER)
+  mustChangePassword Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+
+  memberships        Membership[]
+}
+
+/// Un hogar al que pertenecen uno o varios sims.
+model Household {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+
+  memberships Membership[]
+}
+
+/// Relación N:M entre Sim y Household. Sin rol dentro del hogar.
+model Membership {
+  simId       String
+  householdId String
+  joinedAt    DateTime  @default(now())
+
+  sim         Sim       @relation(fields: [simId], references: [id], onDelete: Cascade)
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@id([simId, householdId])
+}
