@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Search } from "lucide-react";
+import { Search, Languages } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -14,6 +14,7 @@ import {
   listSources,
   type SourceInfo,
 } from "@/lib/actions/nutrition-search";
+import { translateToEnglish } from "@/lib/actions/translate";
 import type { NutritionCandidate, SourceId } from "@/lib/nutrition-sources/types";
 import {
   INGREDIENT_CATEGORIES,
@@ -104,12 +105,17 @@ export function IngredientDialog({
     return s;
   });
 
+  // Término de búsqueda independiente del nombre (precargado con él, pero editable).
+  // Permite buscar "onion" en USDA sin cambiar el nombre "Cebolla" del ingrediente.
+  const [searchTerm, setSearchTerm] = useState(initial?.name ?? initialName);
+
   // Fuentes disponibles + pestaña activa + resultados por búsqueda.
   const [sources, setSources] = useState<SourceInfo[]>([]);
   const [activeSource, setActiveSource] = useState<SourceId>("off");
   const [candidates, setCandidates] = useState<NutritionCandidate[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searching, startSearch] = useTransition();
+  const [translating, startTranslate] = useTransition();
   const [pending, startSave] = useTransition();
 
   useEffect(() => {
@@ -123,6 +129,7 @@ export function IngredientDialog({
 
   function resetForCreate() {
     setName("");
+    setSearchTerm("");
     setCategory("OTRO");
     setUnit("UNIDAD");
     setSource(null);
@@ -132,7 +139,10 @@ export function IngredientDialog({
   }
 
   function handleOpenChange(o: boolean) {
-    if (o && !isEdit) setName(initialName);
+    if (o && !isEdit) {
+      setName(initialName);
+      setSearchTerm(initialName);
+    }
     onOpenChange(o);
   }
 
@@ -141,12 +151,24 @@ export function IngredientDialog({
     setCandidates(null);
     setSearchError(null);
     startSearch(async () => {
-      const res = await searchNutrition(name, sourceId);
+      const res = await searchNutrition(searchTerm, sourceId);
       if (res.ok) {
         setCandidates(res.candidates);
       } else {
         setCandidates([]);
         setSearchError(res.error);
+      }
+    });
+  }
+
+  function translateSearch() {
+    startTranslate(async () => {
+      const res = await translateToEnglish(searchTerm);
+      if (res.ok) {
+        setSearchTerm(res.text);
+        toast.success(`Traducido: "${res.text}"`);
+      } else {
+        toast.error(res.error);
       }
     });
   }
@@ -223,8 +245,36 @@ export function IngredientDialog({
             />
           </div>
 
-          {/* Pestañas de fuente */}
+          {/* Buscador de nutrición (término independiente del nombre) */}
           <div className="flex flex-col gap-2 rounded-md border p-2">
+            <div className="flex items-end gap-2">
+              <div className="flex flex-1 flex-col gap-1">
+                <Label htmlFor="ing-search" className="eyebrow text-muted-foreground">
+                  Término de búsqueda
+                </Label>
+                <Input
+                  id="ing-search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="cebolla / onion…"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={translateSearch}
+                disabled={translating || searchTerm.trim().length < 2}
+                title="Traducir el término a inglés (para USDA)"
+              >
+                <Languages className="size-4" />
+                {translating ? "…" : "EN"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Edítalo libremente (no cambia el nombre del ingrediente). Para USDA, en inglés:
+              usa «EN» para traducir.
+            </p>
+
             <div className="flex flex-wrap items-center gap-1">
               <span className="eyebrow mr-1 text-muted-foreground">Buscar en</span>
               {sources.map((s) => (
@@ -233,7 +283,7 @@ export function IngredientDialog({
                   type="button"
                   size="sm"
                   variant={activeSource === s.id ? "secondary" : "ghost"}
-                  disabled={!s.enabled || searching || name.trim().length < 2}
+                  disabled={!s.enabled || searching || searchTerm.trim().length < 2}
                   title={s.enabled ? s.note : "No configurada"}
                   onClick={() => runSearch(s.id)}
                 >
