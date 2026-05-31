@@ -16,6 +16,16 @@ export type RecipeIngredientSeed = {
   note?: string;
 };
 
+export type Nutrition = {
+  calories: number; // kcal por ración
+  protein: number; // g
+  carbs: number; // g
+  fat: number; // g
+  fiber: number; // g
+  sugar: number; // g
+  salt: number; // g
+};
+
 export type RecipeSeed = {
   name: string;
   description: string;
@@ -25,6 +35,7 @@ export type RecipeSeed = {
   suitableForDinner: boolean;
   steps: string[];
   ingredients: RecipeIngredientSeed[];
+  nutrition: Nutrition; // valores estimados por ración
 };
 
 export const INGREDIENTS: IngredientSeed[] = [
@@ -110,6 +121,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Caldo de verduras", quantity: 1000 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 410, protein: 22, carbs: 48, fat: 13, fiber: 16, sugar: 5, salt: 1.4 },
   },
   {
     name: "Tortilla de patatas",
@@ -131,6 +143,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 6 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 350, protein: 14, carbs: 28, fat: 21, fiber: 3, sugar: 3, salt: 0.9 },
   },
   {
     name: "Macarrones con tomate y chorizo",
@@ -156,6 +169,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 2 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 520, protein: 19, carbs: 68, fat: 19, fiber: 5, sugar: 8, salt: 1.3 },
   },
   {
     name: "Pollo al ajillo",
@@ -179,6 +193,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
       { ingredient: "Pimienta negra", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 390, protein: 38, carbs: 3, fat: 22, fiber: 0, sugar: 1, salt: 1.1 },
   },
   {
     name: "Crema de calabacín",
@@ -201,6 +216,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 2 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 160, protein: 4, carbs: 18, fat: 8, fiber: 4, sugar: 7, salt: 0.9 },
   },
   {
     name: "Merluza a la plancha con limón",
@@ -221,6 +237,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Perejil", quantity: 1, unit: "AL_GUSTO" },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 230, protein: 34, carbs: 2, fat: 9, fiber: 0, sugar: 0, salt: 1.0 },
   },
   {
     name: "Arroz con pollo y verduras",
@@ -246,6 +263,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 3 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 480, protein: 30, carbs: 62, fat: 11, fiber: 4, sugar: 4, salt: 1.2 },
   },
   {
     name: "Espaguetis a la carbonara",
@@ -268,6 +286,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Pimienta negra", quantity: 1, unit: "AL_GUSTO" },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 620, protein: 26, carbs: 75, fat: 24, fiber: 4, sugar: 3, salt: 1.6 },
   },
   {
     name: "Garbanzos con espinacas",
@@ -292,6 +311,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 3 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 340, protein: 16, carbs: 38, fat: 13, fiber: 12, sugar: 4, salt: 1.2 },
   },
   {
     name: "Pisto de verduras con huevo",
@@ -317,6 +337,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 4 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 290, protein: 11, carbs: 20, fat: 18, fiber: 7, sugar: 11, salt: 0.8 },
   },
   {
     name: "Crema de champiñones",
@@ -341,6 +362,7 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
       { ingredient: "Pimienta negra", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 180, protein: 5, carbs: 14, fat: 12, fiber: 3, sugar: 5, salt: 1.0 },
   },
   {
     name: "Albóndigas en salsa",
@@ -368,5 +390,6 @@ export const RECIPES: RecipeSeed[] = [
       { ingredient: "Aceite de oliva", quantity: 4 },
       { ingredient: "Sal", quantity: 1, unit: "AL_GUSTO" },
     ],
+    nutrition: { calories: 430, protein: 28, carbs: 14, fat: 28, fiber: 2, sugar: 5, salt: 1.3 },
   },
 ];

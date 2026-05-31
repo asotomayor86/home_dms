@@ -40,6 +40,15 @@ export default async function EditRecipePage({
       unit: ri.unit as (typeof UNITS)[number],
       note: ri.note,
     })),
+    nutrition: {
+      calories: recipe.calories,
+      protein: recipe.protein,
+      carbs: recipe.carbs,
+      fat: recipe.fat,
+      fiber: recipe.fiber,
+      sugar: recipe.sugar,
+      salt: recipe.salt,
+    },
   };
 
   return (

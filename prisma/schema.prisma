@@ -120,6 +120,16 @@ model Recipe {
   suitableForLunch Boolean  @default(true)
   suitableForDinner Boolean @default(true)
   isActive         Boolean  @default(true)
+
+  // Valores nutricionales estimados POR RACIÓN (opcionales).
+  calories      Float? // kcal
+  protein       Float? // g
+  carbs         Float? // g
+  fat           Float? // g
+  fiber         Float? // g
+  sugar         Float? // g
+  salt          Float? // g
+
   createdById      String?
   createdAt        DateTime @default(now())
 

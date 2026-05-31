@@ -71,6 +71,12 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Corazones rojos en lugar de estrellas (disponibilidad)               | Hecha  | 2026-05-31 | 2026-05-31        |
 | Generación automática del menú mensual (estrategia aleatoria, enchufable) | Hecha | 2026-05-31 | 2026-05-31        |
 | Diálogo de generación (rellenar vacíos / regenerar; respeta filtro)  | Hecha  | 2026-05-31 | 2026-05-31        |
+| Nutrición por ración en recetas (7 campos) + migración + seed         | Hecha  | 2026-05-31 | 2026-05-31        |
+| Nutrición en formulario y detalle de receta                          | Hecha  | 2026-05-31 | 2026-05-31        |
+| Modos de calendario: Visualizar (ver receta) y Generar (asignar)     | Hecha  | 2026-05-31 | 2026-05-31        |
+| Flujo de generación en 2 pasos (algoritmo → modo)                    | Hecha  | 2026-05-31 | 2026-05-31        |
+| Totales nutricionales semanales por ración en el calendario          | Hecha  | 2026-05-31 | 2026-05-31        |
+| Desplegable de filtro de hueco más ancho                             | Hecha  | 2026-05-31 | 2026-05-31        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
 
 ## Próximos incrementos (pendientes de planificar)

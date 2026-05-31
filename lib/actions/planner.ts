@@ -21,12 +21,23 @@ export type GenerateResult =
   | { ok: true; assigned: number; skipped: number }
   | { ok: false; error: string };
 
+export type MealNutrition = {
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  fiber: number | null;
+  sugar: number | null;
+  salt: number | null;
+};
+
 export type PlannedMealView = {
   id: string;
   dayKey: string; // "YYYY-MM-DD"
   slot: MealSlot;
   recipeId: string;
   recipeName: string;
+  nutrition: MealNutrition;
 };
 
 /**
@@ -118,7 +129,18 @@ export async function getMonthPlan(
       date: true,
       slot: true,
       recipeId: true,
-      recipe: { select: { name: true } },
+      recipe: {
+        select: {
+          name: true,
+          calories: true,
+          protein: true,
+          carbs: true,
+          fat: true,
+          fiber: true,
+          sugar: true,
+          salt: true,
+        },
+      },
     },
     orderBy: { date: "asc" },
   });
@@ -129,6 +151,15 @@ export async function getMonthPlan(
     slot: m.slot,
     recipeId: m.recipeId,
     recipeName: m.recipe.name,
+    nutrition: {
+      calories: m.recipe.calories,
+      protein: m.recipe.protein,
+      carbs: m.recipe.carbs,
+      fat: m.recipe.fat,
+      fiber: m.recipe.fiber,
+      sugar: m.recipe.sugar,
+      salt: m.recipe.salt,
+    },
   }));
 }
 

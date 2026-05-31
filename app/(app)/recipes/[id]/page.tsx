@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireSession, canManageRecipe } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { getSimHouseholds, resolveActiveHousehold } from "@/lib/households";
-import { UNIT_LABELS } from "@/lib/validation/recipe";
+import { UNIT_LABELS, NUTRIENTS } from "@/lib/validation/recipe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeActions } from "@/components/recipes/recipe-actions";
@@ -124,6 +124,31 @@ export default async function RecipeDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Nutrición (por ración)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {NUTRIENTS.every((n) => recipe[n.key] == null) ? (
+            <p className="text-sm text-muted-foreground">Sin información nutricional.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+              {NUTRIENTS.map((n) => {
+                const value = recipe[n.key];
+                return (
+                  <div key={n.key} className="flex flex-col">
+                    <span className="eyebrow text-muted-foreground">{n.label}</span>
+                    <span className="text-lg font-semibold">
+                      {value != null ? `${value} ${n.unit}` : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -60,9 +60,27 @@ async function seedRecipes(
   ingredientMap: Map<string, { id: string; defaultUnit: Unit }>,
 ) {
   let created = 0;
+  let updated = 0;
   for (const recipe of RECIPES) {
     const exists = await prisma.recipe.findFirst({ where: { name: recipe.name } });
-    if (exists) continue;
+    if (exists) {
+      // La receta ya existe: actualiza solo los valores nutricionales (idempotente),
+      // sin tocar ingredientes/pasos que el usuario pudiera haber editado.
+      await prisma.recipe.update({
+        where: { id: exists.id },
+        data: {
+          calories: recipe.nutrition.calories,
+          protein: recipe.nutrition.protein,
+          carbs: recipe.nutrition.carbs,
+          fat: recipe.nutrition.fat,
+          fiber: recipe.nutrition.fiber,
+          sugar: recipe.nutrition.sugar,
+          salt: recipe.nutrition.salt,
+        },
+      });
+      updated++;
+      continue;
+    }
 
     await prisma.recipe.create({
       data: {
@@ -73,6 +91,13 @@ async function seedRecipes(
         prepMinutes: recipe.prepMinutes,
         suitableForLunch: recipe.suitableForLunch,
         suitableForDinner: recipe.suitableForDinner,
+        calories: recipe.nutrition.calories,
+        protein: recipe.nutrition.protein,
+        carbs: recipe.nutrition.carbs,
+        fat: recipe.nutrition.fat,
+        fiber: recipe.nutrition.fiber,
+        sugar: recipe.nutrition.sugar,
+        salt: recipe.nutrition.salt,
         createdById,
         ingredients: {
           create: recipe.ingredients.map((ri) => {
@@ -94,7 +119,9 @@ async function seedRecipes(
     });
     created++;
   }
-  console.log(`✔ Recetas creadas: ${created} (de ${RECIPES.length} en el catálogo)`);
+  console.log(
+    `✔ Recetas: ${created} creadas, ${updated} actualizadas (nutrición) de ${RECIPES.length}.`,
+  );
 }
 
 async function main() {

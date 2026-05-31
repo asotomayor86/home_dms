@@ -68,6 +68,21 @@ export const recipeIngredientSchema = z.object({
   note: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
+// Campo nutricional opcional: número ≥ 0 o null (no informado).
+const nutrientField = z.number().min(0).max(100000).optional().nullable();
+
+export const NUTRIENTS = [
+  { key: "calories", label: "Calorías", unit: "kcal" },
+  { key: "protein", label: "Proteínas", unit: "g" },
+  { key: "carbs", label: "Carbohidratos", unit: "g" },
+  { key: "fat", label: "Grasas", unit: "g" },
+  { key: "fiber", label: "Fibra", unit: "g" },
+  { key: "sugar", label: "Azúcares", unit: "g" },
+  { key: "salt", label: "Sal", unit: "g" },
+] as const;
+
+export type NutrientKey = (typeof NUTRIENTS)[number]["key"];
+
 export const recipeSchema = z
   .object({
     name: z.string().trim().min(2, "Nombre demasiado corto").max(120),
@@ -80,6 +95,13 @@ export const recipeSchema = z
     ingredients: z
       .array(recipeIngredientSchema)
       .min(1, "Añade al menos un ingrediente"),
+    calories: nutrientField,
+    protein: nutrientField,
+    carbs: nutrientField,
+    fat: nutrientField,
+    fiber: nutrientField,
+    sugar: nutrientField,
+    salt: nutrientField,
   })
   .refine((d) => d.suitableForLunch || d.suitableForDinner, {
     message: "La receta debe valer para comida, cena o ambas",

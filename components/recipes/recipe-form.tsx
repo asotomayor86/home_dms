@@ -11,6 +11,8 @@ import {
   recipeSchema,
   UNITS,
   UNIT_LABELS,
+  NUTRIENTS,
+  type NutrientKey,
   type RecipeInput,
 } from "@/lib/validation/recipe";
 import { Button } from "@/components/ui/button";
@@ -51,10 +53,19 @@ export type RecipeFormInitial = {
     unit: (typeof UNITS)[number];
     note: string | null;
   }[];
+  nutrition: Partial<Record<NutrientKey, number | null>>;
 };
 
 let keyCounter = 0;
 const nextKey = () => `row-${keyCounter++}`;
+
+/** "" → null; "12.5" → 12.5; valores no numéricos → null. */
+function parseNutrient(value: string): number | null {
+  const t = value.trim();
+  if (t === "") return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
 
 export function RecipeForm({
   ingredients: initialIngredients,
@@ -77,6 +88,16 @@ export function RecipeForm({
   );
   const [forLunch, setForLunch] = useState(initial?.suitableForLunch ?? true);
   const [forDinner, setForDinner] = useState(initial?.suitableForDinner ?? true);
+
+  // Nutrición por ración: valores como string (campo de texto), keyed por nutriente.
+  const [nutrition, setNutrition] = useState<Record<NutrientKey, string>>(() => {
+    const init = {} as Record<NutrientKey, string>;
+    for (const n of NUTRIENTS) {
+      const v = initial?.nutrition?.[n.key];
+      init[n.key] = v != null ? String(v) : "";
+    }
+    return init;
+  });
 
   const [steps, setSteps] = useState<{ key: string; text: string }[]>(
     initial?.steps.length
@@ -134,6 +155,13 @@ export function RecipeForm({
       prepMinutes: prepMinutes.trim() ? Number(prepMinutes) : null,
       suitableForLunch: forLunch,
       suitableForDinner: forDinner,
+      calories: parseNutrient(nutrition.calories),
+      protein: parseNutrient(nutrition.protein),
+      carbs: parseNutrient(nutrition.carbs),
+      fat: parseNutrient(nutrition.fat),
+      fiber: parseNutrient(nutrition.fiber),
+      sugar: parseNutrient(nutrition.sugar),
+      salt: parseNutrient(nutrition.salt),
       steps: steps.map((s) => s.text.trim()).filter(Boolean),
       ingredients: rows
         .filter((r) => r.ingredientId)
@@ -367,6 +395,32 @@ export function RecipeForm({
                   <Trash2 className="size-4" />
                 </Button>
               </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Nutrición (por ración)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {NUTRIENTS.map((n) => (
+            <div key={n.key} className="flex flex-col gap-1">
+              <Label htmlFor={`nut-${n.key}`} className="text-xs">
+                {n.label} ({n.unit})
+              </Label>
+              <Input
+                id={`nut-${n.key}`}
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                value={nutrition[n.key]}
+                onChange={(e) =>
+                  setNutrition((prev) => ({ ...prev, [n.key]: e.target.value }))
+                }
+              />
             </div>
           ))}
         </CardContent>

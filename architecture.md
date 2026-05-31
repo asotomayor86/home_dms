@@ -251,7 +251,18 @@ createdAt   DateTime
   estrategia y persiste en una transacción. `mode`: `fill` (solo huecos vacíos) o `replace`
   (borra el ámbito del mes y reasigna). Añadir algoritmos futuros = registrar otra estrategia,
   sin tocar la persistencia. La marca de disponibilidad se muestra como **corazón rojo**
-  (componente `RecipeStarButton`, sobre `HouseholdRecipe`).
+  (componente `RecipeStarButton`, sobre `HouseholdRecipe`). El flujo de generación pregunta
+  primero el **algoritmo** (paso 1) y luego el **modo** (paso 2).
+
+- **Dos modos de calendario.** `Visualizar` (por defecto): clic en una comida abre un diálogo
+  de solo lectura con la receta y su nutrición. `Generar`: clic abre el selector de receta
+  (asignar/editar) y muestra el botón "Generar menú". Es estado de cliente.
+
+- **Nutrición por ración en `Recipe`.** 7 campos opcionales (`calories, protein, carbs, fat,
+  fiber, sugar, salt`), todos por ración. El calendario suma por semana (`lib/nutrition.ts`)
+  los valores **por ración** de las comidas visibles y los muestra en una columna "Semana"
+  al final de cada fila. El seed mantiene estimaciones para las 12 recetas base (idempotente:
+  *update* de la nutrición si la receta ya existe).
 
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las
