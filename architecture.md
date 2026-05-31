@@ -277,9 +277,12 @@ createdAt   DateTime
 
 - **Fuentes nutricionales multi-fuente (registro enchufable).** `lib/nutrition-sources/`
   define una interfaz `NutritionSource` (`id, label, enabled(), search()`) y un registro
-  (`index.ts`). Fuentes: **Open Food Facts** (sin key), **BEDCA** (oficial española, SOAP/XML,
-  *inestable*), **Mercadona** (API no oficial, *best-effort, riesgo de bloqueo*) y **USDA**
-  (REST/JSON, requiere `USDA_API_KEY` → `enabled()` la comprueba; en inglés). Todas normalizan
+  (`index.ts`). Fuentes: **Open Food Facts** (sin key; productos de marca con código de
+  barras — flojo para frescos genéricos), **USDA** FoodData Central (REST/JSON, requiere
+  `USDA_API_KEY` → `enabled()` la comprueba; en inglés; **buena para alimentos genéricos/
+  frescos**) y **Mercadona** (API no oficial, *best-effort*; solo ingredientes/alérgenos, sin
+  macros). *(BEDCA se evaluó y retiró: su servicio web no devolvía macros de forma fiable.)*
+  Todas normalizan
   a un `NutritionCandidate` común (por 100 g). La server action `searchNutrition(term,
   sourceId)` (en `lib/actions/nutrition-search.ts`) despacha a la fuente y captura sus errores
   (una fuente caída no rompe las demás); `listSources()` indica cuáles están habilitadas.

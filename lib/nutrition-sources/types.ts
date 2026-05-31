@@ -1,6 +1,6 @@
 // Tipos compartidos para las fuentes de datos nutricionales (registro enchufable).
 
-export type SourceId = "off" | "bedca" | "mercadona" | "usda";
+export type SourceId = "off" | "mercadona" | "usda";
 
 /** Candidato normalizado, común a todas las fuentes. Valores por 100 g. */
 export type NutritionCandidate = {

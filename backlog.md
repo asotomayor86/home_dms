@@ -90,7 +90,8 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Sección /ingredientes: tabla con nutrición y factores de conversión   | Hecha  | 2026-05-31 | 2026-05-31        |
 | Etiqueta de factor de conversión según unidad (gramos por diente…)    | Hecha  | 2026-05-31 | 2026-05-31        |
 | Fuentes nutricionales multi-fuente (registro enchufable)             | Hecha  | 2026-05-31 | 2026-05-31        |
-| Fuentes: Open Food Facts, BEDCA, Mercadona, USDA (pestañas)          | Hecha  | 2026-05-31 | 2026-05-31        |
+| Fuentes: Open Food Facts, Mercadona, USDA (pestañas)                 | Hecha  | 2026-05-31 | 2026-05-31        |
+| Retirar BEDCA (no devolvía macros) y Mercadona solo info             | Hecha  | 2026-06-01 | 2026-06-01        |
 | Trazabilidad de origen (sourceId + sourceRef) + migración            | Hecha  | 2026-05-31 | 2026-05-31        |
 | Activar USDA (requiere USDA_API_KEY en Vercel)                       | Pendiente | 2026-05-31 |                   |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
