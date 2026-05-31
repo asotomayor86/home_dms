@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,7 +9,12 @@ import {
   updateIngredient,
   type IngredientOption,
 } from "@/lib/actions/ingredients";
-import { searchOFF, type OFFCandidate } from "@/lib/actions/off";
+import {
+  searchNutrition,
+  listSources,
+  type SourceInfo,
+} from "@/lib/actions/nutrition-search";
+import type { NutritionCandidate, SourceId } from "@/lib/nutrition-sources/types";
 import {
   INGREDIENT_CATEGORIES,
   CATEGORY_LABELS,
@@ -20,6 +25,7 @@ import {
   unitNeedsGramsPerUnit,
   type IngredientNutrientKey,
 } from "@/lib/validation/recipe";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,10 +68,6 @@ function numOrUndef(s: string): number | undefined {
 
 export type IngredientDialogInitial = IngredientOption;
 
-/**
- * Diálogo para crear o editar un ingrediente. Permite buscar en Open Food Facts
- * y autocompletar la nutrición por 100 g. Si recibe `initial`, edita; si no, crea.
- */
 export function IngredientDialog({
   open,
   onOpenChange,
@@ -88,7 +90,9 @@ export function IngredientDialog({
   const [unit, setUnit] = useState<(typeof UNITS)[number]>(
     (initial?.defaultUnit as (typeof UNITS)[number]) ?? "UNIDAD",
   );
-  const [offId, setOffId] = useState<string | null>(initial?.offId ?? null);
+  const [source, setSource] = useState<{ id: string; ref: string } | null>(
+    initial?.sourceId ? { id: initial.sourceId, ref: initial.sourceRef ?? "" } : null,
+  );
   const [nutrition, setNutrition] = useState<NutritionState>(() => {
     if (!initial) return emptyNutrition();
     const s = emptyNutrition();
@@ -100,39 +104,54 @@ export function IngredientDialog({
     return s;
   });
 
-  const [candidates, setCandidates] = useState<OFFCandidate[] | null>(null);
+  // Fuentes disponibles + pestaña activa + resultados por búsqueda.
+  const [sources, setSources] = useState<SourceInfo[]>([]);
+  const [activeSource, setActiveSource] = useState<SourceId>("off");
+  const [candidates, setCandidates] = useState<NutritionCandidate[] | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [searching, startSearch] = useTransition();
   const [pending, startSave] = useTransition();
+
+  useEffect(() => {
+    if (!open) return;
+    listSources().then((s) => {
+      setSources(s);
+      const firstEnabled = s.find((x) => x.enabled);
+      if (firstEnabled) setActiveSource(firstEnabled.id);
+    });
+  }, [open]);
 
   function resetForCreate() {
     setName("");
     setCategory("OTRO");
     setUnit("UNIDAD");
-    setOffId(null);
+    setSource(null);
     setNutrition(emptyNutrition());
     setCandidates(null);
+    setSearchError(null);
   }
 
   function handleOpenChange(o: boolean) {
-    // Al abrir en modo crear, sincroniza el nombre con lo escrito en el buscador.
     if (o && !isEdit) setName(initialName);
     onOpenChange(o);
   }
 
-  function runSearch() {
+  function runSearch(sourceId: SourceId) {
+    setActiveSource(sourceId);
+    setCandidates(null);
+    setSearchError(null);
     startSearch(async () => {
-      const res = await searchOFF(name);
-      if (!res.ok) {
-        toast.error(res.error);
+      const res = await searchNutrition(name, sourceId);
+      if (res.ok) {
+        setCandidates(res.candidates);
+      } else {
         setCandidates([]);
-        return;
+        setSearchError(res.error);
       }
-      setCandidates(res.candidates);
-      if (res.candidates.length === 0) toast.info("Sin resultados en Open Food Facts");
     });
   }
 
-  function applyCandidate(c: OFFCandidate) {
+  function applyCandidate(c: NutritionCandidate) {
     setNutrition((prev) => ({
       ...prev,
       kcalPer100: c.kcalPer100 != null ? String(c.kcalPer100) : prev.kcalPer100,
@@ -147,9 +166,9 @@ export function IngredientDialog({
           ? String(c.servingGrams)
           : prev.gramsPerUnit,
     }));
-    setOffId(c.offId);
+    setSource({ id: c.sourceId, ref: c.externalId });
     setCandidates(null);
-    toast.success("Valores de Open Food Facts aplicados");
+    toast.success(`Valores aplicados desde ${c.sourceId.toUpperCase()}`);
   }
 
   function submit() {
@@ -157,7 +176,8 @@ export function IngredientDialog({
       name,
       category,
       defaultUnit: unit,
-      offId,
+      sourceId: source?.id ?? null,
+      sourceRef: source?.ref ?? null,
       kcalPer100: numOrUndef(nutrition.kcalPer100),
       proteinPer100: numOrUndef(nutrition.proteinPer100),
       carbsPer100: numOrUndef(nutrition.carbsPer100),
@@ -183,63 +203,81 @@ export function IngredientDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar ingrediente" : "Nuevo ingrediente"}</DialogTitle>
           <DialogDescription>
-            Catálogo común. Busca en Open Food Facts para autocompletar la nutrición por
-            100 g, o introdúcela a mano.
+            Busca la nutrición por 100 g en varias fuentes o introdúcela a mano.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="ing-name">Nombre</Label>
-            <div className="flex gap-2">
-              <Input
-                id="ing-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Tomate"
-                autoFocus
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={runSearch}
-                disabled={searching || name.trim().length < 2}
-                title="Buscar en Open Food Facts"
-              >
-                <Search className="size-4" />
-                {searching ? "Buscando…" : "OFF"}
-              </Button>
-            </div>
+            <Input
+              id="ing-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Tomate"
+              autoFocus
+            />
           </div>
 
-          {/* Candidatos de Open Food Facts */}
-          {candidates && candidates.length > 0 && (
-            <div className="flex flex-col gap-1 rounded-md border p-2">
-              <span className="eyebrow text-muted-foreground">Resultados Open Food Facts</span>
-              {candidates.map((c) => (
-                <button
-                  key={c.offId}
+          {/* Pestañas de fuente */}
+          <div className="flex flex-col gap-2 rounded-md border p-2">
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="eyebrow mr-1 text-muted-foreground">Buscar en</span>
+              {sources.map((s) => (
+                <Button
+                  key={s.id}
                   type="button"
-                  onClick={() => applyCandidate(c)}
-                  className="flex items-center justify-between gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent"
+                  size="sm"
+                  variant={activeSource === s.id ? "secondary" : "ghost"}
+                  disabled={!s.enabled || searching || name.trim().length < 2}
+                  title={s.enabled ? s.note : "No configurada"}
+                  onClick={() => runSearch(s.id)}
                 >
-                  <span className="truncate">
-                    {c.name}
-                    {c.brand && (
-                      <span className="text-muted-foreground"> · {c.brand}</span>
-                    )}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {c.kcalPer100 != null ? `${c.kcalPer100} kcal/100g` : "—"}
-                  </span>
-                </button>
+                  {s.label}
+                </Button>
               ))}
+              <Search className="ml-auto size-4 text-muted-foreground" />
             </div>
-          )}
+
+            {searching && (
+              <p className="px-1 text-sm text-muted-foreground">Buscando…</p>
+            )}
+            {!searching && searchError && (
+              <p className="px-1 text-sm text-muted-foreground">{searchError}</p>
+            )}
+            {!searching && candidates && candidates.length === 0 && !searchError && (
+              <p className="px-1 text-sm text-muted-foreground">Sin resultados.</p>
+            )}
+            {!searching && candidates && candidates.length > 0 && (
+              <div className="flex flex-col gap-1">
+                {candidates.map((c) => (
+                  <button
+                    key={`${c.sourceId}-${c.externalId}`}
+                    type="button"
+                    onClick={() => applyCandidate(c)}
+                    className="flex items-center justify-between gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent"
+                  >
+                    <span className="truncate">
+                      {c.name}
+                      {c.brand && <span className="text-muted-foreground"> · {c.brand}</span>}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {c.kcalPer100 != null ? `${c.kcalPer100} kcal` : "sin macros"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {source && (
+              <p className="px-1 text-xs text-muted-foreground">
+                Origen actual: {source.id.toUpperCase()}
+              </p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
@@ -274,7 +312,7 @@ export function IngredientDialog({
             </div>
           </div>
 
-          {/* Nutrición por 100 g */}
+          {/* Nutrición por 100 g + factor de conversión */}
           <div className="flex flex-col gap-2">
             <Label className="eyebrow text-muted-foreground">Nutrición por 100 g</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -295,7 +333,7 @@ export function IngredientDialog({
                   />
                 </div>
               ))}
-              <div className="flex flex-col gap-1">
+              <div className={cn("flex flex-col gap-1", !unitNeedsGramsPerUnit(unit) && "opacity-60")}>
                 <Label htmlFor="ing-gramsPerUnit" className="text-xs">
                   Gramos por {UNIT_SINGULAR[unit]}
                 </Label>
@@ -314,13 +352,11 @@ export function IngredientDialog({
             {unitNeedsGramsPerUnit(unit) ? (
               <p className="text-xs text-muted-foreground">
                 Factor de conversión: cuántos gramos pesa 1 {UNIT_SINGULAR[unit]} (p. ej. 1
-                cebolla ≈ 110 g, 1 diente de ajo ≈ 5 g). Necesario para calcular la nutrición
-                de recetas medidas en «{UNIT_LABELS[unit]}».
+                cebolla ≈ 110 g, 1 diente de ajo ≈ 5 g).
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Esta unidad ya se mide en peso/volumen, así que el factor de conversión no es
-                imprescindible para el cálculo.
+                Esta unidad ya se mide en peso/volumen; el factor no es imprescindible.
               </p>
             )}
           </div>

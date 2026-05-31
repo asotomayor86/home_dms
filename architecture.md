@@ -275,10 +275,18 @@ createdAt   DateTime
   `partial` + lista de ingredientes sin datos. El seed puebla los ~48 ingredientes con
   valores de referencia y limpia los overrides de las 12 recetas (idempotente).
 
-- **Open Food Facts.** `lib/actions/off.ts` (`searchOFF`, server action, sin API key) busca
-  productos en OFF (es) y devuelve candidatos con nutrición/100 g. El diálogo de ingrediente
-  (`IngredientDialog`, crear/editar) ofrece "Buscar en OFF" → elegir candidato → autocompleta
-  los campos. Densidad de líquidos ≈ 1 (aproximación). Datos OFF colaborativos: revisables.
+- **Fuentes nutricionales multi-fuente (registro enchufable).** `lib/nutrition-sources/`
+  define una interfaz `NutritionSource` (`id, label, enabled(), search()`) y un registro
+  (`index.ts`). Fuentes: **Open Food Facts** (sin key), **BEDCA** (oficial española, SOAP/XML,
+  *inestable*), **Mercadona** (API no oficial, *best-effort, riesgo de bloqueo*) y **USDA**
+  (REST/JSON, requiere `USDA_API_KEY` → `enabled()` la comprueba; en inglés). Todas normalizan
+  a un `NutritionCandidate` común (por 100 g). La server action `searchNutrition(term,
+  sourceId)` (en `lib/actions/nutrition-search.ts`) despacha a la fuente y captura sus errores
+  (una fuente caída no rompe las demás); `listSources()` indica cuáles están habilitadas.
+  El `IngredientDialog` muestra **pestañas por fuente**; al elegir un candidato autocompleta
+  los campos y guarda el origen. Añadir una fuente nueva = registrar un módulo. Densidad de
+  líquidos ≈ 1 (aproximación). **Trazabilidad**: `Ingredient.sourceId` + `sourceRef` registran
+  de qué fuente y con qué id se tomaron los valores (sustituyen al antiguo `offId`).
 
 - **Sección de ingredientes (`/ingredientes`).** Catálogo gestionable (cualquier usuario):
   tabla con buscador que muestra la nutrición por 100 g y el **factor de conversión** (cuántos

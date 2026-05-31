@@ -167,7 +167,8 @@ export const createIngredientSchema = z.object({
   category: z.enum(INGREDIENT_CATEGORIES),
   defaultUnit: z.enum(UNITS),
   ...ingredientNutritionShape,
-  offId: z.string().max(64).optional().nullable(),
+  sourceId: z.string().max(16).optional().nullable(),
+  sourceRef: z.string().max(64).optional().nullable(),
 });
 
 export type CreateIngredientInput = z.infer<typeof createIngredientSchema>;

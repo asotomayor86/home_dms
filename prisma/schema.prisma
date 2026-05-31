@@ -115,8 +115,10 @@ model Ingredient {
 
   // Gramos que pesa 1 "unidad base" (para UNIDAD/DIENTE/LATA/MANOJO/cucharadas…).
   gramsPerUnit Float?
-  // Código del producto de Open Food Facts del que se tomaron los valores.
-  offId        String?
+  // Fuente de la que se tomaron los valores nutricionales y su referencia/id en ella.
+  // sourceId ∈ {off, bedca, mercadona, usda}; sourceRef = id del producto en esa fuente.
+  sourceId  String?
+  sourceRef String?
 
   recipeIngredients RecipeIngredient[]
 }

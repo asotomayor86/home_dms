@@ -26,7 +26,8 @@ export type IngredientOption = {
   sugarPer100: number | null;
   saltPer100: number | null;
   gramsPerUnit: number | null;
-  offId: string | null;
+  sourceId: string | null;
+  sourceRef: string | null;
 };
 
 export type CreateIngredientResult =
@@ -48,7 +49,8 @@ function toOption(r: {
   sugarPer100: number | null;
   saltPer100: number | null;
   gramsPerUnit: number | null;
-  offId: string | null;
+  sourceId: string | null;
+  sourceRef: string | null;
 }): IngredientOption {
   return {
     id: r.id,
@@ -63,7 +65,8 @@ function toOption(r: {
     sugarPer100: r.sugarPer100,
     saltPer100: r.saltPer100,
     gramsPerUnit: r.gramsPerUnit,
-    offId: r.offId,
+    sourceId: r.sourceId,
+    sourceRef: r.sourceRef,
   };
 }
 
@@ -85,7 +88,8 @@ function nutritionData(input: CreateIngredientInput) {
     sugarPer100: input.sugarPer100 ?? null,
     saltPer100: input.saltPer100 ?? null,
     gramsPerUnit: input.gramsPerUnit ?? null,
-    offId: input.offId ?? null,
+    sourceId: input.sourceId ?? null,
+    sourceRef: input.sourceRef ?? null,
   };
 }
 
