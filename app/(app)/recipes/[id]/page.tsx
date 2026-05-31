@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 
 import { requireSession, canManageRecipe } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { getSimHouseholds, resolveActiveHousehold } from "@/lib/households";
 import { UNIT_LABELS } from "@/lib/validation/recipe";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeActions } from "@/components/recipes/recipe-actions";
+import { RecipeStarButton } from "@/components/recipes/recipe-star-button";
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +41,31 @@ export default async function RecipeDetailPage({
 
   const canManage = canManageRecipe(session.user, recipe);
 
+  // Estrella: contexto del hogar activo del sim.
+  const households = await getSimHouseholds(session.user.id);
+  const activeHousehold = resolveActiveHousehold(households, undefined);
+  const starred = activeHousehold
+    ? !!(await prisma.householdRecipe.findUnique({
+        where: {
+          householdId_recipeId: { householdId: activeHousehold.id, recipeId: id },
+        },
+        select: { recipeId: true },
+      }))
+    : false;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold">{recipe.name}</h1>
+            {activeHousehold && (
+              <RecipeStarButton
+                householdId={activeHousehold.id}
+                recipeId={recipe.id}
+                starred={starred}
+              />
+            )}
             {!recipe.isActive && <Badge variant="outline">Inactiva</Badge>}
           </div>
           {recipe.description && (

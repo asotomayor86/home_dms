@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 /** Devuelve la sesión o redirige a /login si no hay sesión. */
 export async function requireSession() {
@@ -26,4 +27,13 @@ export function canManageRecipe(
   recipe: { createdById: string | null },
 ): boolean {
   return user.role === "ADMIN" || recipe.createdById === user.id;
+}
+
+/** ¿Pertenece el sim al hogar indicado? */
+export async function isMemberOf(simId: string, householdId: string): Promise<boolean> {
+  const m = await prisma.membership.findUnique({
+    where: { simId_householdId: { simId, householdId } },
+    select: { simId: true },
+  });
+  return !!m;
 }

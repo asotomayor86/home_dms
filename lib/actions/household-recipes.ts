@@ -4,24 +4,16 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth-helpers";
+import { requireSession, isMemberOf } from "@/lib/auth-helpers";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
-
-/** Comprueba que el sim autenticado pertenece al hogar indicado. */
-async function assertMembership(simId: string, householdId: string): Promise<boolean> {
-  const m = await prisma.membership.findUnique({
-    where: { simId_householdId: { simId, householdId } },
-  });
-  return !!m;
-}
 
 export async function addRecipeToHousehold(
   householdId: string,
   recipeId: string,
 ): Promise<SimpleResult> {
   const session = await requireSession();
-  if (!(await assertMembership(session.user.id, householdId))) {
+  if (!(await isMemberOf(session.user.id, householdId))) {
     return { ok: false, error: "No perteneces a ese hogar" };
   }
 
@@ -34,6 +26,8 @@ export async function addRecipeToHousehold(
     }
   }
   revalidatePath("/recipes/seleccion");
+  revalidatePath("/recipes");
+  revalidatePath("/calendario");
   return { ok: true };
 }
 
@@ -42,11 +36,13 @@ export async function removeRecipeFromHousehold(
   recipeId: string,
 ): Promise<SimpleResult> {
   const session = await requireSession();
-  if (!(await assertMembership(session.user.id, householdId))) {
+  if (!(await isMemberOf(session.user.id, householdId))) {
     return { ok: false, error: "No perteneces a ese hogar" };
   }
 
   await prisma.householdRecipe.deleteMany({ where: { householdId, recipeId } });
   revalidatePath("/recipes/seleccion");
+  revalidatePath("/recipes");
+  revalidatePath("/calendario");
   return { ok: true };
 }

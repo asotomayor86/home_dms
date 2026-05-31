@@ -45,6 +45,12 @@ export function AppHeader({
           >
             Recetas
           </Link>
+          <Link
+            href="/calendario"
+            className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Calendario
+          </Link>
           {isAdmin && (
             <Link
               href="/admin"

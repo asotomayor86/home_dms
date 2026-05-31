@@ -53,11 +53,28 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | "Mi menú" /recipes/seleccion con selector de hogar                   | Hecha  | 2026-05-30 | 2026-05-30        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-30 | 2026-05-30        |
 
+## Incremento 3 — Calendario de menús por hogar
+
+| Tarea                                                                 | Estado | Fecha alta | Fecha realización |
+| --------------------------------------------------------------------- | ------ | ---------- | ----------------- |
+| Modelo PlannedMeal + enum MealSlot (relaciones inversas)              | Hecha  | 2026-05-31 | 2026-05-31        |
+| Migración del planner (offline diff) + cliente                       | Hecha  | 2026-05-31 | 2026-05-31        |
+| Server actions del planner (set/clear/getMonthPlan)                  | Hecha  | 2026-05-31 | 2026-05-31        |
+| Utilidades de fecha (monthGrid lunes→domingo, UTC)                   | Hecha  | 2026-05-31 | 2026-05-31        |
+| Estrella de disponibilidad (RecipeStarButton, reutiliza HouseholdRecipe) | Hecha | 2026-05-31 | 2026-05-31        |
+| Selector de hogar reutilizable + helpers de hogares                  | Hecha  | 2026-05-31 | 2026-05-31        |
+| Estrellas en listado y detalle de recetas                            | Hecha  | 2026-05-31 | 2026-05-31        |
+| Calendario /calendario (cuadrícula mensual compacta + toolbar)       | Hecha  | 2026-05-31 | 2026-05-31        |
+| Filtros (hueco y texto) y navegación de mes + Hoy                    | Hecha  | 2026-05-31 | 2026-05-31        |
+| Diálogo de asignación (pool con estrella, apto por hueco)            | Hecha  | 2026-05-31 | 2026-05-31        |
+| Enlace "Calendario" en cabecera                                      | Hecha  | 2026-05-31 | 2026-05-31        |
+| Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
+
 ## Próximos incrementos (pendientes de planificar)
 
 | Tarea                                                       | Estado    | Fecha alta | Fecha realización |
 | ----------------------------------------------------------- | --------- | ---------- | ----------------- |
-| Generación automática de plan mensual de comidas/cenas por hogar | Pendiente | 2026-05-30 |                   |
+| Generación automática de plan mensual (draft) sobre el pool con estrella | Pendiente | 2026-05-30 |                   |
 | Cesta de la compra (agregación + escalado por hogar)       | Pendiente | 2026-05-30 |                   |
 | Edición de perfil del sim (nombre visible, avatar)         | Pendiente | 2026-05-30 |                   |
 | Módulo de gastos                                            | Pendiente | 2026-05-30 |                   |

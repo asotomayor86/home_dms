@@ -34,7 +34,8 @@ model Sim {
   createdAt          DateTime     @default(now())
 
   memberships        Membership[]
-  createdRecipes     Recipe[]     @relation("RecipeCreatedBy")
+  createdRecipes     Recipe[]      @relation("RecipeCreatedBy")
+  plannedMeals       PlannedMeal[] @relation("PlannedMealCreatedBy")
 }
 
 /// Un hogar al que pertenecen uno o varios sims.
@@ -43,8 +44,9 @@ model Household {
   name        String
   createdAt   DateTime          @default(now())
 
-  memberships Membership[]
-  recipes     HouseholdRecipe[]
+  memberships  Membership[]
+  recipes      HouseholdRecipe[]
+  plannedMeals PlannedMeal[]
 }
 
 /// Relación N:M entre Sim y Household. Sin rol dentro del hogar.
@@ -122,9 +124,10 @@ model Recipe {
   createdAt        DateTime @default(now())
 
   // Si se borra el autor, la receta permanece en el catálogo común (createdById → null).
-  createdBy   Sim?               @relation("RecipeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  ingredients RecipeIngredient[]
-  households  HouseholdRecipe[]
+  createdBy    Sim?               @relation("RecipeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  ingredients  RecipeIngredient[]
+  households   HouseholdRecipe[]
+  plannedMeals PlannedMeal[]
 }
 
 /// Relación receta ↔ ingrediente con la cantidad para las `servings` base.
@@ -141,7 +144,8 @@ model RecipeIngredient {
   @@id([recipeId, ingredientId])
 }
 
-/// Recetas que un hogar ha seleccionado para entrar en la generación de su plan.
+/// Recetas que un hogar ha seleccionado ("estrella") para entrar en su plan.
+/// Es el "pool" disponible para asignar en el calendario y para el futuro draft.
 model HouseholdRecipe {
   householdId String
   recipeId    String
@@ -151,4 +155,33 @@ model HouseholdRecipe {
   recipe    Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@id([householdId, recipeId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Incremento 3 — Calendario de menús
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Hueco de comida del día.
+enum MealSlot {
+  LUNCH
+  DINNER
+}
+
+/// Una receta asignada a un hueco (comida/cena) de un día concreto en un hogar.
+/// La clave única (householdId, date, slot) garantiza un único plato por hueco.
+model PlannedMeal {
+  id          String   @id @default(cuid())
+  householdId String
+  date        DateTime @db.Date
+  slot        MealSlot
+  recipeId    String
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  recipe    Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdBy Sim?      @relation("PlannedMealCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([householdId, date, slot])
+  @@index([householdId, date])
 }

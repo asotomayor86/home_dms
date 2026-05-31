@@ -12,9 +12,12 @@ App web de gestión doméstica familiar para un grupo cerrado de hogares (≈6-7
 - **Incremento 2** — **catálogo de recetas**: recetas con ingredientes (catálogo maestro
   normalizado) y pasos, gestionables por cualquier usuario, y selección de recetas por
   hogar (`HouseholdRecipe`) como base para la futura generación de plan mensual y cesta.
+- **Incremento 3** — **calendario de menús por hogar**: cuadrícula mensual (lunes→domingo)
+  con asignación manual de comida/cena por día (`PlannedMeal`), y **estrellas** que marcan
+  qué recetas están disponibles para el hogar (el "pool" reutiliza `HouseholdRecipe`).
 
-Los módulos de plan de comidas, cesta de la compra, gastos e inventario llegarán en
-incrementos posteriores.
+Los módulos de generación automática del draft mensual, cesta de la compra, gastos e
+inventario llegarán en incrementos posteriores.
 
 ## Stack
 
@@ -132,6 +135,28 @@ PK compuesta (householdId, recipeId)
   el nº de miembros del hogar (`miembros / servings`).
 - **HouseholdRecipe**: qué recetas ha activado cada hogar para entrar en su plan.
 
+### Modelo de calendario (incremento 3)
+
+```
+PlannedMeal
+──────────────────────────────
+id          String (cuid, PK)
+householdId FK→Household (cascade)
+date        Date (@db.Date, día puro sin hora)
+slot        MealSlot (LUNCH | DINNER)
+recipeId    FK→Recipe (cascade)
+createdById FK→Sim? (SetNull)
+createdAt   DateTime
+@@unique([householdId, date, slot])   ← 1 receta por hueco/día/hogar
+@@index([householdId, date])
+```
+
+- **PlannedMeal**: una receta asignada a un hueco (comida/cena) de un día concreto de un
+  hogar. La clave única garantiza el formato compacto de "2 líneas por día".
+- **Estrella = `HouseholdRecipe`**: no hay modelo nuevo; la estrella en una receta es el
+  toggle que crea/borra el registro hogar↔receta. El pool del calendario (y del futuro
+  draft) son las recetas con estrella del hogar, filtradas por aptitud del hueco.
+
 ## Decisiones de diseño
 
 - **Multi-hogar vía Membership, sin roles de hogar.** Un sim puede pertenecer a varios
@@ -195,6 +220,30 @@ PK compuesta (householdId, recipeId)
   varios hogares, `/recipes/seleccion` lleva un selector (limitado a sus hogares) vía query
   param `?household=`. Es el primer punto donde la UI necesita "contexto de hogar"; el plan
   y la cesta probablemente eleven esto a un selector global.
+
+### Decisiones del incremento 3 (calendario)
+
+- **Estrella = disponibilidad de hogar, reutiliza `HouseholdRecipe`.** La estrella en una
+  receta (listado y detalle) es el mismo toggle que "Mi menú"; ambas vistas operan sobre la
+  misma tabla. La estrella necesita un hogar de contexto → selector de hogar también en
+  `/recipes` (`HouseholdSwitcher`, query `?household=`). Helpers en `lib/households.ts`
+  (`getSimHouseholds`, `resolveActiveHousehold`) e `isMemberOf` en `auth-helpers`.
+
+- **Una receta por hueco/día/hogar.** `PlannedMeal` con `@@unique([householdId, date,
+  slot])`; `setPlannedMeal` hace *upsert*. Esto fuerza el calendario compacto (máx. 2 líneas
+  por día: comida y cena). El "primer+segundo plato" queda fuera de este calendario.
+
+- **Pool validado en servidor.** `setPlannedMeal` exige que la receta esté en el pool del
+  hogar (estrella) **y** sea apta para el hueco (`suitableForLunch`/`Dinner`); el diálogo
+  cliente ya filtra, pero la server action revalida (no confía en el cliente).
+
+- **Fechas como día puro (UTC).** `PlannedMeal.date` es `@db.Date`; en código se manejan
+  fechas a medianoche UTC (`lib/date-utils.ts`: `utcDate`, `dayKey`, `monthGrid` lunes→
+  domingo) para evitar desfases de zona horaria al decidir "qué día es".
+
+- **Navegación de mes vía query params.** `/calendario?household=&year=&month=` (month 0-11)
+  es la fuente de verdad del mes mostrado; la toolbar reescribe los params y el servidor
+  recarga el plan. Filtros (hueco y texto) son estado de cliente.
 
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las

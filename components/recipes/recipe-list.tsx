@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RecipeStarButton } from "@/components/recipes/recipe-star-button";
 
 type RecipeCard = {
   id: string;
@@ -17,9 +18,16 @@ type RecipeCard = {
   suitableForDinner: boolean;
   isActive: boolean;
   ingredientCount: number;
+  starred: boolean;
 };
 
-export function RecipeList({ recipes }: { recipes: RecipeCard[] }) {
+export function RecipeList({
+  recipes,
+  householdId,
+}: {
+  recipes: RecipeCard[];
+  householdId: string | null;
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = recipes.filter((r) =>
@@ -48,11 +56,19 @@ export function RecipeList({ recipes }: { recipes: RecipeCard[] }) {
               <Card className="h-full transition-colors hover:bg-muted/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    {r.name}
+                    <span className="flex-1">{r.name}</span>
                     {!r.isActive && (
                       <Badge variant="outline" className="font-normal">
                         Inactiva
                       </Badge>
+                    )}
+                    {householdId && (
+                      <RecipeStarButton
+                        householdId={householdId}
+                        recipeId={r.id}
+                        starred={r.starred}
+                        size="icon-sm"
+                      />
                     )}
                   </CardTitle>
                 </CardHeader>
