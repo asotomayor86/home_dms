@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -67,10 +67,10 @@ export function RecipeStarButton({
       aria-label={starred ? "Quitar de mi menú" : "Añadir a mi menú"}
       title={starred ? "Disponible para el hogar" : "Marcar como disponible"}
     >
-      <Star
+      <Heart
         className={cn(
           "size-4 transition-colors",
-          starred ? "fill-foreground text-foreground" : "text-muted-foreground",
+          starred ? "fill-red-600 text-red-600" : "text-muted-foreground",
         )}
       />
     </Button>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 import type { MealSlot } from "@prisma/client";
 import type { PlannedMealView } from "@/lib/actions/planner";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MealAssignDialog } from "@/components/calendar/meal-assign-dialog";
+import { GenerateMenuDialog } from "@/components/calendar/generate-menu-dialog";
 
 export type PoolRecipe = {
   id: string;
@@ -56,6 +57,7 @@ export function MealCalendar({
   const [slotFilter, setSlotFilter] = useState<SlotFilter>("all");
   const [query, setQuery] = useState("");
   const [activeCell, setActiveCell] = useState<ActiveCell>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   const weeks = useMemo(() => monthGrid(year, month), [year, month]);
   const todayKey = dayKey(new Date(Date.UTC(
@@ -111,6 +113,10 @@ export function MealCalendar({
           </Button>
           <Button variant="ghost" size="sm" onClick={goToday}>
             Hoy
+          </Button>
+          <Button size="sm" onClick={() => setGenerateOpen(true)}>
+            <Sparkles className="size-4" />
+            Generar menú
           </Button>
         </div>
 
@@ -213,6 +219,19 @@ export function MealCalendar({
           }}
         />
       )}
+
+      <GenerateMenuDialog
+        open={generateOpen}
+        onOpenChange={setGenerateOpen}
+        householdId={activeHouseholdId}
+        year={year}
+        month={month}
+        scope={slotFilter}
+        onDone={() => {
+          setGenerateOpen(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

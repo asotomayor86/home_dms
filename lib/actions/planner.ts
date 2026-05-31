@@ -1,13 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { MealSlot } from "@prisma/client";
+import type { MealSlot, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireSession, isMemberOf } from "@/lib/auth-helpers";
-import { parseDayKey, utcDate } from "@/lib/date-utils";
+import { parseDayKey, utcDate, dayKey as toDayKey } from "@/lib/date-utils";
+import {
+  getStrategy,
+  type SlotToFill,
+  type StrategyId,
+} from "@/lib/planner-strategies";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
+
+export type GenerateMode = "fill" | "replace";
+export type SlotScope = "all" | "lunch" | "dinner";
+
+export type GenerateResult =
+  | { ok: true; assigned: number; skipped: number }
+  | { ok: false; error: string };
 
 export type PlannedMealView = {
   id: string;
@@ -118,4 +130,114 @@ export async function getMonthPlan(
     recipeId: m.recipeId,
     recipeName: m.recipe.name,
   }));
+}
+
+/**
+ * Genera automáticamente el menú de un mes para el hogar usando una estrategia
+ * (de momento solo "random"). `mode` decide si solo rellena huecos vacíos
+ * ("fill") o regenera todo el mes ("replace"); `scope` limita a comida/cena.
+ */
+export async function generateMonthPlan(params: {
+  householdId: string;
+  year: number;
+  month: number; // 0-11
+  mode: GenerateMode;
+  scope: SlotScope;
+  strategy?: StrategyId;
+}): Promise<GenerateResult> {
+  const { householdId, year, month, mode, scope, strategy = "random" } = params;
+
+  const session = await requireSession();
+  if (!(await isMemberOf(session.user.id, householdId))) {
+    return { ok: false, error: "No perteneces a ese hogar" };
+  }
+
+  // Pool del hogar (recetas con corazón, activas).
+  const poolRows = await prisma.householdRecipe.findMany({
+    where: { householdId, recipe: { isActive: true } },
+    select: {
+      recipe: { select: { id: true, suitableForLunch: true, suitableForDinner: true } },
+    },
+  });
+  const pool = poolRows.map((p) => p.recipe);
+  if (pool.length === 0) {
+    return { ok: false, error: "No hay recetas marcadas como disponibles para el hogar" };
+  }
+
+  // Días del mes objetivo (solo el mes en sí, sin relleno de semanas).
+  const slotsForScope: MealSlot[] =
+    scope === "lunch" ? ["LUNCH"] : scope === "dinner" ? ["DINNER"] : ["LUNCH", "DINNER"];
+
+  const monthStart = utcDate(year, month, 1);
+  const monthEnd = utcDate(year, month + 1, 0); // último día del mes
+  const daysInMonth = monthEnd.getUTCDate();
+
+  const allSlots: SlotToFill[] = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = toDayKey(utcDate(year, month, d));
+    for (const slot of slotsForScope) allSlots.push({ dayKey: key, slot });
+  }
+
+  // Huecos ya ocupados en el mes (para modo "fill" y para el borrado en "replace").
+  const existing = await prisma.plannedMeal.findMany({
+    where: {
+      householdId,
+      date: { gte: monthStart, lte: monthEnd },
+      slot: { in: slotsForScope },
+    },
+    select: { date: true, slot: true },
+  });
+  const occupied = new Set(
+    existing.map((e) => `${e.date.toISOString().slice(0, 10)}|${e.slot}`),
+  );
+
+  // En "replace" se reasignan todos los huecos del scope; en "fill" solo los vacíos.
+  const targetSlots =
+    mode === "replace"
+      ? allSlots
+      : allSlots.filter((s) => !occupied.has(`${s.dayKey}|${s.slot}`));
+
+  if (targetSlots.length === 0) {
+    return { ok: true, assigned: 0, skipped: 0 };
+  }
+
+  const assignments = getStrategy(strategy)({ slots: targetSlots, pool });
+
+  // Persistencia atómica: en "replace" borramos el scope del mes primero.
+  const ops: Prisma.PrismaPromise<unknown>[] = [];
+  if (mode === "replace") {
+    ops.push(
+      prisma.plannedMeal.deleteMany({
+        where: {
+          householdId,
+          date: { gte: monthStart, lte: monthEnd },
+          slot: { in: slotsForScope },
+        },
+      }),
+    );
+  }
+  for (const a of assignments) {
+    const date = parseDayKey(a.dayKey);
+    ops.push(
+      prisma.plannedMeal.upsert({
+        where: { householdId_date_slot: { householdId, date, slot: a.slot } },
+        update: { recipeId: a.recipeId, createdById: session.user.id },
+        create: {
+          householdId,
+          date,
+          slot: a.slot,
+          recipeId: a.recipeId,
+          createdById: session.user.id,
+        },
+      }),
+    );
+  }
+  await prisma.$transaction(ops);
+
+  revalidatePath("/calendario");
+  return {
+    ok: true,
+    assigned: assignments.length,
+    skipped: targetSlots.length - assignments.length,
+  };
 }

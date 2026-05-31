@@ -68,13 +68,16 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Filtros (hueco y texto) y navegación de mes + Hoy                    | Hecha  | 2026-05-31 | 2026-05-31        |
 | Diálogo de asignación (pool con estrella, apto por hueco)            | Hecha  | 2026-05-31 | 2026-05-31        |
 | Enlace "Calendario" en cabecera                                      | Hecha  | 2026-05-31 | 2026-05-31        |
+| Corazones rojos en lugar de estrellas (disponibilidad)               | Hecha  | 2026-05-31 | 2026-05-31        |
+| Generación automática del menú mensual (estrategia aleatoria, enchufable) | Hecha | 2026-05-31 | 2026-05-31        |
+| Diálogo de generación (rellenar vacíos / regenerar; respeta filtro)  | Hecha  | 2026-05-31 | 2026-05-31        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
 
 ## Próximos incrementos (pendientes de planificar)
 
 | Tarea                                                       | Estado    | Fecha alta | Fecha realización |
 | ----------------------------------------------------------- | --------- | ---------- | ----------------- |
-| Generación automática de plan mensual (draft) sobre el pool con estrella | Pendiente | 2026-05-30 |                   |
+| Más algoritmos de generación de menú (evitar repeticiones, equilibrio…) | Pendiente | 2026-05-31 |                   |
 | Cesta de la compra (agregación + escalado por hogar)       | Pendiente | 2026-05-30 |                   |
 | Edición de perfil del sim (nombre visible, avatar)         | Pendiente | 2026-05-30 |                   |
 | Módulo de gastos                                            | Pendiente | 2026-05-30 |                   |

@@ -69,7 +69,7 @@ export default async function CalendarPage({
       <div>
         <h1 className="text-2xl font-semibold">Calendario</h1>
         <p className="text-muted-foreground">
-          Planifica comidas y cenas del hogar. Usa recetas marcadas con ★.
+          Planifica comidas y cenas del hogar. Usa recetas marcadas con ❤️.
         </p>
       </div>
 

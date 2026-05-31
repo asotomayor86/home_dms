@@ -245,6 +245,14 @@ createdAt   DateTime
   es la fuente de verdad del mes mostrado; la toolbar reescribe los params y el servidor
   recarga el plan. Filtros (hueco y texto) son estado de cliente.
 
+- **Generador de menú enchufable.** `lib/planner-strategies.ts` define un registro de
+  estrategias `(ctx) => Assignment[]` (hoy solo `random`); `generateMonthPlan` arma los
+  huecos del mes según el ámbito (comida/cena, tomado del filtro de la toolbar), aplica la
+  estrategia y persiste en una transacción. `mode`: `fill` (solo huecos vacíos) o `replace`
+  (borra el ámbito del mes y reasigna). Añadir algoritmos futuros = registrar otra estrategia,
+  sin tocar la persistencia. La marca de disponibilidad se muestra como **corazón rojo**
+  (componente `RecipeStarButton`, sobre `HouseholdRecipe`).
+
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las
   rutas afectadas (`revalidatePath`). La UI cliente usa `useTransition` + toasts.

@@ -51,7 +51,7 @@ export default async function RecipesPage({
         <div>
           <h1 className="text-2xl font-semibold">Recetas</h1>
           <p className="text-muted-foreground">
-            Catálogo común. Marca con ★ las recetas disponibles para tu hogar.
+            Catálogo común. Marca con ❤️ las recetas disponibles para tu hogar.
           </p>
         </div>
         <div className="flex items-center gap-2">

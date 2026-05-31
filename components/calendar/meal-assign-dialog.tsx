@@ -100,13 +100,13 @@ export function MealAssignDialog({
             {SLOT_LABEL[slot]} · {formatDay(dayKey)}
           </DialogTitle>
           <DialogDescription>
-            Elige una receta del menú del hogar (★) apta para {SLOT_LABEL[slot]}.
+            Elige una receta del menú del hogar (❤️) apta para {SLOT_LABEL[slot]}.
           </DialogDescription>
         </DialogHeader>
 
         {options.length === 0 ? (
           <p className="py-4 text-sm text-muted-foreground">
-            No hay recetas marcadas con ★ aptas para {SLOT_LABEL[slot]}. Marca recetas como
+            No hay recetas marcadas con ❤️ aptas para {SLOT_LABEL[slot]}. Marca recetas como
             disponibles desde el catálogo o &quot;Mi menú&quot;.
           </p>
         ) : (
