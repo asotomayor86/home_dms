@@ -82,6 +82,11 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Resumen nutricional de la semana debajo del calendario               | Hecha  | 2026-05-31 | 2026-05-31        |
 | Toolbar: modo en línea fija, filtro de hueco en mayúsculas           | Hecha  | 2026-05-31 | 2026-05-31        |
 | Overlay de receta sobre el calendario (cierre rápido)                | Hecha  | 2026-05-31 | 2026-05-31        |
+| Nutrición en el ingrediente (por 100g + gramos/unidad) + migración    | Hecha  | 2026-05-31 | 2026-05-31        |
+| Cálculo de nutrición de receta desde ingredientes (override opcional) | Hecha  | 2026-05-31 | 2026-05-31        |
+| Integración Open Food Facts (búsqueda + autocompletar ingrediente)    | Hecha  | 2026-05-31 | 2026-05-31        |
+| Seed: valores nutricionales de los ~48 ingredientes                  | Hecha  | 2026-05-31 | 2026-05-31        |
+| Form receta: preview calculado en vivo + override plegable           | Hecha  | 2026-05-31 | 2026-05-31        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
 
 ## Próximos incrementos (pendientes de planificar)

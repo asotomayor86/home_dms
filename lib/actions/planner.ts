@@ -6,6 +6,7 @@ import type { MealSlot, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSession, isMemberOf } from "@/lib/auth-helpers";
 import { parseDayKey, dayKey as toDayKey, weekDays } from "@/lib/date-utils";
+import { computeNutrition } from "@/lib/nutrition-server";
 import {
   getStrategy,
   type SlotToFill,
@@ -132,6 +133,7 @@ export async function getWeekPlan(
       recipe: {
         select: {
           name: true,
+          servings: true,
           calories: true,
           protein: true,
           carbs: true,
@@ -139,28 +141,40 @@ export async function getWeekPlan(
           fiber: true,
           sugar: true,
           salt: true,
+          ingredients: {
+            include: {
+              ingredient: {
+                select: {
+                  name: true,
+                  gramsPerUnit: true,
+                  kcalPer100: true,
+                  proteinPer100: true,
+                  carbsPer100: true,
+                  fatPer100: true,
+                  fiberPer100: true,
+                  sugarPer100: true,
+                  saltPer100: true,
+                },
+              },
+            },
+          },
         },
       },
     },
     orderBy: { date: "asc" },
   });
 
-  return meals.map((m) => ({
-    id: m.id,
-    dayKey: m.date.toISOString().slice(0, 10),
-    slot: m.slot,
-    recipeId: m.recipeId,
-    recipeName: m.recipe.name,
-    nutrition: {
-      calories: m.recipe.calories,
-      protein: m.recipe.protein,
-      carbs: m.recipe.carbs,
-      fat: m.recipe.fat,
-      fiber: m.recipe.fiber,
-      sugar: m.recipe.sugar,
-      salt: m.recipe.salt,
-    },
-  }));
+  return meals.map((m) => {
+    const computed = computeNutrition(m.recipe);
+    return {
+      id: m.id,
+      dayKey: m.date.toISOString().slice(0, 10),
+      slot: m.slot,
+      recipeId: m.recipeId,
+      recipeName: m.recipe.name,
+      nutrition: computed.values,
+    };
+  });
 }
 
 /**

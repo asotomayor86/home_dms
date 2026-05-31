@@ -104,6 +104,20 @@ model Ingredient {
   category    IngredientCategory @default(OTRO)
   defaultUnit Unit               @default(UNIDAD)
 
+  // Nutrición por 100 g (opcional; "no informado" = se excluye del cálculo de receta).
+  kcalPer100    Float?
+  proteinPer100 Float?
+  carbsPer100   Float?
+  fatPer100     Float?
+  fiberPer100   Float?
+  sugarPer100   Float?
+  saltPer100    Float?
+
+  // Gramos que pesa 1 "unidad base" (para UNIDAD/DIENTE/LATA/MANOJO/cucharadas…).
+  gramsPerUnit Float?
+  // Código del producto de Open Food Facts del que se tomaron los valores.
+  offId        String?
+
   recipeIngredients RecipeIngredient[]
 }
 

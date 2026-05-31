@@ -4,6 +4,8 @@ import { requireSession, canManageRecipe } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { getSimHouseholds, resolveActiveHousehold } from "@/lib/households";
 import { UNIT_LABELS, NUTRIENTS } from "@/lib/validation/recipe";
+import { computeNutrition } from "@/lib/nutrition-server";
+import { formatNutrient } from "@/lib/nutrition";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeActions } from "@/components/recipes/recipe-actions";
@@ -32,7 +34,21 @@ export default async function RecipeDetailPage({
     include: {
       createdBy: { select: { displayName: true } },
       ingredients: {
-        include: { ingredient: { select: { name: true } } },
+        include: {
+          ingredient: {
+            select: {
+              name: true,
+              gramsPerUnit: true,
+              kcalPer100: true,
+              proteinPer100: true,
+              carbsPer100: true,
+              fatPer100: true,
+              fiberPer100: true,
+              sugarPer100: true,
+              saltPer100: true,
+            },
+          },
+        },
       },
     },
   });
@@ -40,6 +56,7 @@ export default async function RecipeDetailPage({
   if (!recipe) notFound();
 
   const canManage = canManageRecipe(session.user, recipe);
+  const computedNutrition = computeNutrition(recipe);
 
   // Estrella: contexto del hogar activo del sim.
   const households = await getSimHouseholds(session.user.id);
@@ -130,22 +147,30 @@ export default async function RecipeDetailPage({
           <CardTitle>Nutrición (por ración)</CardTitle>
         </CardHeader>
         <CardContent>
-          {NUTRIENTS.every((n) => recipe[n.key] == null) ? (
+          {NUTRIENTS.every((n) => computedNutrition.values[n.key] == null) ? (
             <p className="text-sm text-muted-foreground">Sin información nutricional.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-              {NUTRIENTS.map((n) => {
-                const value = recipe[n.key];
-                return (
-                  <div key={n.key} className="flex flex-col">
-                    <span className="eyebrow text-muted-foreground">{n.label}</span>
-                    <span className="text-lg font-semibold">
-                      {value != null ? `${value} ${n.unit}` : "—"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                {NUTRIENTS.map((n) => {
+                  const value = computedNutrition.values[n.key];
+                  return (
+                    <div key={n.key} className="flex flex-col">
+                      <span className="eyebrow text-muted-foreground">{n.label}</span>
+                      <span className="text-lg font-semibold">
+                        {value != null ? `${formatNutrient(n.key, value)} ${n.unit}` : "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {computedNutrition.partial && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Cálculo parcial: sin datos nutricionales de{" "}
+                  {computedNutrition.missing.join(", ")}.
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

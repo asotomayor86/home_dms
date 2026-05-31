@@ -264,11 +264,21 @@ createdAt   DateTime
   de solo lectura con la receta y su nutrición. `Generar`: clic abre el selector de receta
   (asignar/editar) y muestra el botón "Generar menú". Es estado de cliente.
 
-- **Nutrición por ración en `Recipe`.** 7 campos opcionales (`calories, protein, carbs, fat,
-  fiber, sugar, salt`), todos por ración. El calendario suma por semana (`lib/nutrition.ts`)
-  los valores **por ración** de las comidas visibles y los muestra en una columna "Semana"
-  al final de cada fila. El seed mantiene estimaciones para las 12 recetas base (idempotente:
-  *update* de la nutrición si la receta ya existe).
+- **Nutrición calculada desde los ingredientes (con override).** El `Ingredient` guarda
+  valores por 100 g (`kcalPer100…saltPer100`) + `gramsPerUnit` (peso de 1 unidad base) +
+  `offId`. La nutrición por ración de una receta se **calcula**: cada ingrediente se convierte
+  a gramos (`toGrams`: directo para g/kg/ml/l; `gramsPerUnit` para unidad/diente/lata/
+  cucharada; `AL_GUSTO`=0) y se suma `valor×gramos/100`, dividido por raciones. Los 7 campos
+  de `Recipe` (`calories…salt`) son ahora **override opcional**: si están informados, mandan.
+  `nutritionForRecipe` (cliente, `lib/nutrition.ts`) y `computeNutrition`/`computeNutrition
+  ForRecipeIds` (servidor, `lib/nutrition-server.ts`) implementan esto; devuelven flag
+  `partial` + lista de ingredientes sin datos. El seed puebla los ~48 ingredientes con
+  valores de referencia y limpia los overrides de las 12 recetas (idempotente).
+
+- **Open Food Facts.** `lib/actions/off.ts` (`searchOFF`, server action, sin API key) busca
+  productos en OFF (es) y devuelve candidatos con nutrición/100 g. El diálogo de ingrediente
+  (`IngredientDialog`, crear/editar) ofrece "Buscar en OFF" → elegir candidato → autocompleta
+  los campos. Densidad de líquidos ≈ 1 (aproximación). Datos OFF colaborativos: revisables.
 
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las

@@ -7,6 +7,15 @@ export type IngredientSeed = {
   name: string;
   category: IngredientCategory;
   defaultUnit: Unit;
+  // Nutrición por 100 g (valores de referencia genéricos) y gramos por "unidad base".
+  kcalPer100?: number;
+  proteinPer100?: number;
+  carbsPer100?: number;
+  fatPer100?: number;
+  fiberPer100?: number;
+  sugarPer100?: number;
+  saltPer100?: number;
+  gramsPerUnit?: number;
 };
 
 export type RecipeIngredientSeed = {
@@ -35,62 +44,67 @@ export type RecipeSeed = {
   suitableForDinner: boolean;
   steps: string[];
   ingredients: RecipeIngredientSeed[];
-  nutrition: Nutrition; // valores estimados por ración
+  // Estimación por ración (referencia histórica). Ya NO se usa como override en el
+  // seed: la nutrición se calcula desde los ingredientes. Se conserva como dato.
+  nutrition?: Nutrition;
 };
 
+// Valores nutricionales por 100 g de referencia (genéricos, aprox.) y gramos por
+// "unidad base". Sirven para que el cálculo de recetas funcione desde el seed; son
+// editables después por ingrediente (también desde Open Food Facts).
 export const INGREDIENTS: IngredientSeed[] = [
   // Verduras / hortalizas
-  { name: "Cebolla", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Ajo", category: "VERDURA", defaultUnit: "DIENTE" },
-  { name: "Tomate", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Tomate triturado", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Pimiento verde", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Pimiento rojo", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Patata", category: "VERDURA", defaultUnit: "GRAMO" },
-  { name: "Zanahoria", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Calabacín", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Berenjena", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Lechuga", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Espinacas", category: "VERDURA", defaultUnit: "GRAMO" },
-  { name: "Puerro", category: "VERDURA", defaultUnit: "UNIDAD" },
-  { name: "Champiñones", category: "VERDURA", defaultUnit: "GRAMO" },
-  { name: "Guisantes", category: "CONGELADO", defaultUnit: "GRAMO" },
-  { name: "Judías verdes", category: "VERDURA", defaultUnit: "GRAMO" },
-  { name: "Garbanzos cocidos", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Lentejas", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Arroz", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Pasta (macarrones)", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Espagueti", category: "DESPENSA", defaultUnit: "GRAMO" },
-  { name: "Pan", category: "PANADERIA", defaultUnit: "UNIDAD" },
-  { name: "Harina", category: "DESPENSA", defaultUnit: "GRAMO" },
+  { name: "Cebolla", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 40, proteinPer100: 1.1, carbsPer100: 9, fatPer100: 0.1, fiberPer100: 1.7, sugarPer100: 4.2, saltPer100: 0, gramsPerUnit: 110 },
+  { name: "Ajo", category: "VERDURA", defaultUnit: "DIENTE", kcalPer100: 149, proteinPer100: 6.4, carbsPer100: 33, fatPer100: 0.5, fiberPer100: 2.1, sugarPer100: 1, saltPer100: 0, gramsPerUnit: 5 },
+  { name: "Tomate", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 18, proteinPer100: 0.9, carbsPer100: 3.9, fatPer100: 0.2, fiberPer100: 1.2, sugarPer100: 2.6, saltPer100: 0, gramsPerUnit: 120 },
+  { name: "Tomate triturado", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 25, proteinPer100: 1.2, carbsPer100: 4.5, fatPer100: 0.2, fiberPer100: 1.4, sugarPer100: 4, saltPer100: 0.1 },
+  { name: "Pimiento verde", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 20, proteinPer100: 0.9, carbsPer100: 3.9, fatPer100: 0.2, fiberPer100: 1.7, sugarPer100: 2.4, saltPer100: 0, gramsPerUnit: 150 },
+  { name: "Pimiento rojo", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 31, proteinPer100: 1, carbsPer100: 6, fatPer100: 0.3, fiberPer100: 2.1, sugarPer100: 4.2, saltPer100: 0, gramsPerUnit: 150 },
+  { name: "Patata", category: "VERDURA", defaultUnit: "GRAMO", kcalPer100: 77, proteinPer100: 2, carbsPer100: 17, fatPer100: 0.1, fiberPer100: 2.2, sugarPer100: 0.8, saltPer100: 0 },
+  { name: "Zanahoria", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 41, proteinPer100: 0.9, carbsPer100: 10, fatPer100: 0.2, fiberPer100: 2.8, sugarPer100: 4.7, saltPer100: 0.1, gramsPerUnit: 70 },
+  { name: "Calabacín", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 17, proteinPer100: 1.2, carbsPer100: 3.1, fatPer100: 0.3, fiberPer100: 1, sugarPer100: 2.5, saltPer100: 0, gramsPerUnit: 200 },
+  { name: "Berenjena", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 25, proteinPer100: 1, carbsPer100: 6, fatPer100: 0.2, fiberPer100: 3, sugarPer100: 3.5, saltPer100: 0, gramsPerUnit: 250 },
+  { name: "Lechuga", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 15, proteinPer100: 1.4, carbsPer100: 2.9, fatPer100: 0.2, fiberPer100: 1.3, sugarPer100: 0.8, saltPer100: 0, gramsPerUnit: 300 },
+  { name: "Espinacas", category: "VERDURA", defaultUnit: "GRAMO", kcalPer100: 23, proteinPer100: 2.9, carbsPer100: 3.6, fatPer100: 0.4, fiberPer100: 2.2, sugarPer100: 0.4, saltPer100: 0.1 },
+  { name: "Puerro", category: "VERDURA", defaultUnit: "UNIDAD", kcalPer100: 61, proteinPer100: 1.5, carbsPer100: 14, fatPer100: 0.3, fiberPer100: 1.8, sugarPer100: 3.9, saltPer100: 0, gramsPerUnit: 100 },
+  { name: "Champiñones", category: "VERDURA", defaultUnit: "GRAMO", kcalPer100: 22, proteinPer100: 3.1, carbsPer100: 3.3, fatPer100: 0.3, fiberPer100: 1, sugarPer100: 2, saltPer100: 0 },
+  { name: "Guisantes", category: "CONGELADO", defaultUnit: "GRAMO", kcalPer100: 81, proteinPer100: 5.4, carbsPer100: 14, fatPer100: 0.4, fiberPer100: 5.1, sugarPer100: 5.7, saltPer100: 0 },
+  { name: "Judías verdes", category: "VERDURA", defaultUnit: "GRAMO", kcalPer100: 31, proteinPer100: 1.8, carbsPer100: 7, fatPer100: 0.2, fiberPer100: 3.4, sugarPer100: 3.3, saltPer100: 0 },
+  { name: "Garbanzos cocidos", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 139, proteinPer100: 8.9, carbsPer100: 18, fatPer100: 2.6, fiberPer100: 5, sugarPer100: 0.5, saltPer100: 0.3 },
+  { name: "Lentejas", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 116, proteinPer100: 9, carbsPer100: 20, fatPer100: 0.4, fiberPer100: 8, sugarPer100: 1.8, saltPer100: 0 },
+  { name: "Arroz", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 360, proteinPer100: 7, carbsPer100: 79, fatPer100: 0.9, fiberPer100: 1.3, sugarPer100: 0.1, saltPer100: 0 },
+  { name: "Pasta (macarrones)", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 359, proteinPer100: 12, carbsPer100: 72, fatPer100: 1.5, fiberPer100: 3, sugarPer100: 2.7, saltPer100: 0 },
+  { name: "Espagueti", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 359, proteinPer100: 12, carbsPer100: 72, fatPer100: 1.5, fiberPer100: 3, sugarPer100: 2.7, saltPer100: 0 },
+  { name: "Pan", category: "PANADERIA", defaultUnit: "UNIDAD", kcalPer100: 265, proteinPer100: 9, carbsPer100: 49, fatPer100: 3.2, fiberPer100: 2.7, sugarPer100: 3, saltPer100: 1.2, gramsPerUnit: 60 },
+  { name: "Harina", category: "DESPENSA", defaultUnit: "GRAMO", kcalPer100: 364, proteinPer100: 10, carbsPer100: 76, fatPer100: 1, fiberPer100: 2.7, sugarPer100: 0.3, saltPer100: 0 },
   // Proteínas
-  { name: "Huevo", category: "HUEVOS", defaultUnit: "UNIDAD" },
-  { name: "Pollo (pechuga)", category: "CARNE", defaultUnit: "GRAMO" },
-  { name: "Pollo (muslos)", category: "CARNE", defaultUnit: "GRAMO" },
-  { name: "Carne picada de ternera", category: "CARNE", defaultUnit: "GRAMO" },
-  { name: "Chorizo", category: "CARNE", defaultUnit: "GRAMO" },
-  { name: "Bacon", category: "CARNE", defaultUnit: "GRAMO" },
-  { name: "Atún en lata", category: "PESCADO", defaultUnit: "LATA" },
-  { name: "Merluza", category: "PESCADO", defaultUnit: "GRAMO" },
-  { name: "Gambas", category: "PESCADO", defaultUnit: "GRAMO" },
+  { name: "Huevo", category: "HUEVOS", defaultUnit: "UNIDAD", kcalPer100: 143, proteinPer100: 13, carbsPer100: 0.7, fatPer100: 9.5, fiberPer100: 0, sugarPer100: 0.4, saltPer100: 0.4, gramsPerUnit: 55 },
+  { name: "Pollo (pechuga)", category: "CARNE", defaultUnit: "GRAMO", kcalPer100: 120, proteinPer100: 23, carbsPer100: 0, fatPer100: 2.6, fiberPer100: 0, sugarPer100: 0, saltPer100: 0.1 },
+  { name: "Pollo (muslos)", category: "CARNE", defaultUnit: "GRAMO", kcalPer100: 177, proteinPer100: 19, carbsPer100: 0, fatPer100: 11, fiberPer100: 0, sugarPer100: 0, saltPer100: 0.2 },
+  { name: "Carne picada de ternera", category: "CARNE", defaultUnit: "GRAMO", kcalPer100: 250, proteinPer100: 18, carbsPer100: 0, fatPer100: 20, fiberPer100: 0, sugarPer100: 0, saltPer100: 0.2 },
+  { name: "Chorizo", category: "CARNE", defaultUnit: "GRAMO", kcalPer100: 455, proteinPer100: 24, carbsPer100: 2, fatPer100: 38, fiberPer100: 0, sugarPer100: 1, saltPer100: 2.7 },
+  { name: "Bacon", category: "CARNE", defaultUnit: "GRAMO", kcalPer100: 380, proteinPer100: 14, carbsPer100: 1, fatPer100: 35, fiberPer100: 0, sugarPer100: 0, saltPer100: 2 },
+  { name: "Atún en lata", category: "PESCADO", defaultUnit: "LATA", kcalPer100: 116, proteinPer100: 26, carbsPer100: 0, fatPer100: 1, fiberPer100: 0, sugarPer100: 0, saltPer100: 0.9, gramsPerUnit: 80 },
+  { name: "Merluza", category: "PESCADO", defaultUnit: "GRAMO", kcalPer100: 71, proteinPer100: 17, carbsPer100: 0, fatPer100: 0.3, fiberPer100: 0, sugarPer100: 0, saltPer100: 0.2 },
+  { name: "Gambas", category: "PESCADO", defaultUnit: "GRAMO", kcalPer100: 99, proteinPer100: 24, carbsPer100: 0.2, fatPer100: 0.3, fiberPer100: 0, sugarPer100: 0, saltPer100: 1.5 },
   // Lácteos
-  { name: "Queso rallado", category: "LACTEO", defaultUnit: "GRAMO" },
-  { name: "Leche", category: "LACTEO", defaultUnit: "MILILITRO" },
-  { name: "Mantequilla", category: "LACTEO", defaultUnit: "GRAMO" },
-  { name: "Nata para cocinar", category: "LACTEO", defaultUnit: "MILILITRO" },
+  { name: "Queso rallado", category: "LACTEO", defaultUnit: "GRAMO", kcalPer100: 380, proteinPer100: 27, carbsPer100: 2, fatPer100: 29, fiberPer100: 0, sugarPer100: 0.5, saltPer100: 1.8 },
+  { name: "Leche", category: "LACTEO", defaultUnit: "MILILITRO", kcalPer100: 64, proteinPer100: 3.2, carbsPer100: 4.8, fatPer100: 3.6, fiberPer100: 0, sugarPer100: 4.8, saltPer100: 0.1 },
+  { name: "Mantequilla", category: "LACTEO", defaultUnit: "GRAMO", kcalPer100: 717, proteinPer100: 0.9, carbsPer100: 0.1, fatPer100: 81, fiberPer100: 0, sugarPer100: 0.1, saltPer100: 0.1 },
+  { name: "Nata para cocinar", category: "LACTEO", defaultUnit: "MILILITRO", kcalPer100: 195, proteinPer100: 2.6, carbsPer100: 3.4, fatPer100: 19, fiberPer100: 0, sugarPer100: 3.4, saltPer100: 0.1 },
   // Despensa / condimentos
-  { name: "Aceite de oliva", category: "CONDIMENTO", defaultUnit: "CUCHARADA" },
-  { name: "Sal", category: "CONDIMENTO", defaultUnit: "AL_GUSTO" },
-  { name: "Pimienta negra", category: "CONDIMENTO", defaultUnit: "AL_GUSTO" },
-  { name: "Pimentón dulce", category: "CONDIMENTO", defaultUnit: "CUCHARADITA" },
-  { name: "Comino", category: "CONDIMENTO", defaultUnit: "CUCHARADITA" },
-  { name: "Laurel", category: "CONDIMENTO", defaultUnit: "UNIDAD" },
-  { name: "Caldo de pollo", category: "DESPENSA", defaultUnit: "MILILITRO" },
-  { name: "Caldo de verduras", category: "DESPENSA", defaultUnit: "MILILITRO" },
-  { name: "Azúcar", category: "DESPENSA", defaultUnit: "CUCHARADA" },
-  { name: "Vino blanco", category: "BEBIDA", defaultUnit: "MILILITRO" },
-  { name: "Limón", category: "FRUTA", defaultUnit: "UNIDAD" },
-  { name: "Perejil", category: "CONDIMENTO", defaultUnit: "MANOJO" },
+  { name: "Aceite de oliva", category: "CONDIMENTO", defaultUnit: "CUCHARADA", kcalPer100: 884, proteinPer100: 0, carbsPer100: 0, fatPer100: 100, fiberPer100: 0, sugarPer100: 0, saltPer100: 0, gramsPerUnit: 14 },
+  { name: "Sal", category: "CONDIMENTO", defaultUnit: "AL_GUSTO", kcalPer100: 0, proteinPer100: 0, carbsPer100: 0, fatPer100: 0, fiberPer100: 0, sugarPer100: 0, saltPer100: 100, gramsPerUnit: 6 },
+  { name: "Pimienta negra", category: "CONDIMENTO", defaultUnit: "AL_GUSTO", kcalPer100: 251, proteinPer100: 10, carbsPer100: 64, fatPer100: 3.3, fiberPer100: 25, sugarPer100: 0.6, saltPer100: 0.1, gramsPerUnit: 2 },
+  { name: "Pimentón dulce", category: "CONDIMENTO", defaultUnit: "CUCHARADITA", kcalPer100: 282, proteinPer100: 14, carbsPer100: 54, fatPer100: 13, fiberPer100: 35, sugarPer100: 10, saltPer100: 0.1, gramsPerUnit: 2.5 },
+  { name: "Comino", category: "CONDIMENTO", defaultUnit: "CUCHARADITA", kcalPer100: 375, proteinPer100: 18, carbsPer100: 44, fatPer100: 22, fiberPer100: 11, sugarPer100: 2.3, saltPer100: 0.4, gramsPerUnit: 2 },
+  { name: "Laurel", category: "CONDIMENTO", defaultUnit: "UNIDAD", kcalPer100: 313, proteinPer100: 7.6, carbsPer100: 75, fatPer100: 8.4, fiberPer100: 26, sugarPer100: 0, saltPer100: 0.1, gramsPerUnit: 0.2 },
+  { name: "Caldo de pollo", category: "DESPENSA", defaultUnit: "MILILITRO", kcalPer100: 8, proteinPer100: 0.5, carbsPer100: 0.8, fatPer100: 0.3, fiberPer100: 0, sugarPer100: 0.3, saltPer100: 0.8 },
+  { name: "Caldo de verduras", category: "DESPENSA", defaultUnit: "MILILITRO", kcalPer100: 6, proteinPer100: 0.3, carbsPer100: 0.9, fatPer100: 0.2, fiberPer100: 0, sugarPer100: 0.4, saltPer100: 0.8 },
+  { name: "Azúcar", category: "DESPENSA", defaultUnit: "CUCHARADA", kcalPer100: 400, proteinPer100: 0, carbsPer100: 100, fatPer100: 0, fiberPer100: 0, sugarPer100: 100, saltPer100: 0, gramsPerUnit: 12 },
+  { name: "Vino blanco", category: "BEBIDA", defaultUnit: "MILILITRO", kcalPer100: 82, proteinPer100: 0.1, carbsPer100: 2.6, fatPer100: 0, fiberPer100: 0, sugarPer100: 1, saltPer100: 0 },
+  { name: "Limón", category: "FRUTA", defaultUnit: "UNIDAD", kcalPer100: 29, proteinPer100: 1.1, carbsPer100: 9, fatPer100: 0.3, fiberPer100: 2.8, sugarPer100: 2.5, saltPer100: 0, gramsPerUnit: 100 },
+  { name: "Perejil", category: "CONDIMENTO", defaultUnit: "MANOJO", kcalPer100: 36, proteinPer100: 3, carbsPer100: 6, fatPer100: 0.8, fiberPer100: 3.3, sugarPer100: 0.9, saltPer100: 0.1, gramsPerUnit: 10 },
 ];
 
 export const RECIPES: RecipeSeed[] = [

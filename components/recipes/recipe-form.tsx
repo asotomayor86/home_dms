@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import {
   type NutrientKey,
   type RecipeInput,
 } from "@/lib/validation/recipe";
+import { nutritionForRecipe, formatNutrient } from "@/lib/nutrition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,7 +90,7 @@ export function RecipeForm({
   const [forLunch, setForLunch] = useState(initial?.suitableForLunch ?? true);
   const [forDinner, setForDinner] = useState(initial?.suitableForDinner ?? true);
 
-  // Nutrición por ración: valores como string (campo de texto), keyed por nutriente.
+  // Override nutricional por ración (opcional): si se rellena, manda sobre el cálculo.
   const [nutrition, setNutrition] = useState<Record<NutrientKey, string>>(() => {
     const init = {} as Record<NutrientKey, string>;
     for (const n of NUTRIENTS) {
@@ -98,6 +99,10 @@ export function RecipeForm({
     }
     return init;
   });
+  // ¿Mostrar el bloque de ajuste manual? Abierto si ya hay algún override.
+  const [showOverride, setShowOverride] = useState(() =>
+    NUTRIENTS.some((n) => initial?.nutrition?.[n.key] != null),
+  );
 
   const [steps, setSteps] = useState<{ key: string; text: string }[]>(
     initial?.steps.length
@@ -116,6 +121,37 @@ export function RecipeForm({
         }))
       : [{ key: nextKey(), ingredientId: null, quantity: "", unit: "UNIDAD", note: "" }],
   );
+
+  // Preview de la nutrición CALCULADA desde los ingredientes (sin override),
+  // recalculada en vivo según las filas y las raciones.
+  const calcPreview = useMemo(() => {
+    const byId = new Map(catalog.map((c) => [c.id, c]));
+    const ingredients = rows
+      .filter((r) => r.ingredientId && r.quantity.trim() !== "")
+      .map((r) => {
+        const ing = byId.get(r.ingredientId as string);
+        return {
+          name: ing?.name ?? "ingrediente",
+          quantity: Number(r.quantity) || 0,
+          unit: r.unit,
+          gramsPerUnit: ing?.gramsPerUnit ?? null,
+          per100: {
+            calories: ing?.kcalPer100 ?? null,
+            protein: ing?.proteinPer100 ?? null,
+            carbs: ing?.carbsPer100 ?? null,
+            fat: ing?.fatPer100 ?? null,
+            fiber: ing?.fiberPer100 ?? null,
+            sugar: ing?.sugarPer100 ?? null,
+            salt: ing?.saltPer100 ?? null,
+          },
+        };
+      });
+    return nutritionForRecipe({
+      servings: Number(servings) || 1,
+      override: {},
+      ingredients,
+    });
+  }, [catalog, rows, servings]);
 
   function addIngredientRow() {
     setRows((r) => [
@@ -404,25 +440,70 @@ export function RecipeForm({
         <CardHeader>
           <CardTitle>Nutrición (por ración)</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {NUTRIENTS.map((n) => (
-            <div key={n.key} className="flex flex-col gap-1">
-              <Label htmlFor={`nut-${n.key}`} className="text-xs">
-                {n.label} ({n.unit})
-              </Label>
-              <Input
-                id={`nut-${n.key}`}
-                type="number"
-                min={0}
-                step="any"
-                inputMode="decimal"
-                value={nutrition[n.key]}
-                onChange={(e) =>
-                  setNutrition((prev) => ({ ...prev, [n.key]: e.target.value }))
-                }
-              />
+        <CardContent className="flex flex-col gap-4">
+          {/* Preview calculado desde los ingredientes */}
+          <div>
+            <p className="eyebrow mb-2 text-muted-foreground">
+              Calculado desde los ingredientes
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+              {NUTRIENTS.map((n) => {
+                const v = calcPreview.values[n.key];
+                return (
+                  <div key={n.key} className="flex flex-col">
+                    <span className="eyebrow text-muted-foreground">{n.label}</span>
+                    <span className="text-base font-semibold">
+                      {v != null ? `${formatNutrient(n.key, v)} ${n.unit}` : "—"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+            {calcPreview.partial && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Cálculo parcial: sin datos de {calcPreview.missing.join(", ")}.
+              </p>
+            )}
+          </div>
+
+          {/* Ajuste manual (override) opcional */}
+          <div className="border-t pt-3">
+            <button
+              type="button"
+              onClick={() => setShowOverride((s) => !s)}
+              className="eyebrow text-muted-foreground hover:text-foreground"
+            >
+              {showOverride ? "− Ocultar ajuste manual" : "+ Ajustar manualmente (override)"}
+            </button>
+            {showOverride && (
+              <>
+                <p className="mt-2 mb-2 text-xs text-muted-foreground">
+                  Si rellenas un valor, sustituye al cálculo para ese nutriente. Déjalo vacío
+                  para usar el calculado.
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {NUTRIENTS.map((n) => (
+                    <div key={n.key} className="flex flex-col gap-1">
+                      <Label htmlFor={`nut-${n.key}`} className="text-xs">
+                        {n.label} ({n.unit})
+                      </Label>
+                      <Input
+                        id={`nut-${n.key}`}
+                        type="number"
+                        min={0}
+                        step="any"
+                        inputMode="decimal"
+                        value={nutrition[n.key]}
+                        onChange={(e) =>
+                          setNutrition((prev) => ({ ...prev, [n.key]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
 

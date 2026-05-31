@@ -43,10 +43,24 @@ async function seedAdmin(): Promise<string> {
 async function seedIngredients() {
   const map = new Map<string, { id: string; defaultUnit: Unit }>();
   for (const ing of INGREDIENTS) {
+    // Incluye nutrición por 100 g + gramsPerUnit tanto al crear como al actualizar,
+    // para que las filas ya existentes en producción reciban los valores de referencia.
+    const data = {
+      category: ing.category,
+      defaultUnit: ing.defaultUnit,
+      kcalPer100: ing.kcalPer100 ?? null,
+      proteinPer100: ing.proteinPer100 ?? null,
+      carbsPer100: ing.carbsPer100 ?? null,
+      fatPer100: ing.fatPer100 ?? null,
+      fiberPer100: ing.fiberPer100 ?? null,
+      sugarPer100: ing.sugarPer100 ?? null,
+      saltPer100: ing.saltPer100 ?? null,
+      gramsPerUnit: ing.gramsPerUnit ?? null,
+    };
     const row = await prisma.ingredient.upsert({
       where: { name: ing.name },
-      update: { category: ing.category, defaultUnit: ing.defaultUnit },
-      create: ing,
+      update: data,
+      create: { name: ing.name, ...data },
     });
     map.set(ing.name, { id: row.id, defaultUnit: row.defaultUnit });
   }
@@ -64,18 +78,18 @@ async function seedRecipes(
   for (const recipe of RECIPES) {
     const exists = await prisma.recipe.findFirst({ where: { name: recipe.name } });
     if (exists) {
-      // La receta ya existe: actualiza solo los valores nutricionales (idempotente),
-      // sin tocar ingredientes/pasos que el usuario pudiera haber editado.
+      // La receta ya existe: limpia los overrides nutricionales para que la nutrición
+      // se CALCULE desde los ingredientes (que ahora tienen datos por 100 g).
       await prisma.recipe.update({
         where: { id: exists.id },
         data: {
-          calories: recipe.nutrition.calories,
-          protein: recipe.nutrition.protein,
-          carbs: recipe.nutrition.carbs,
-          fat: recipe.nutrition.fat,
-          fiber: recipe.nutrition.fiber,
-          sugar: recipe.nutrition.sugar,
-          salt: recipe.nutrition.salt,
+          calories: null,
+          protein: null,
+          carbs: null,
+          fat: null,
+          fiber: null,
+          sugar: null,
+          salt: null,
         },
       });
       updated++;
@@ -91,13 +105,7 @@ async function seedRecipes(
         prepMinutes: recipe.prepMinutes,
         suitableForLunch: recipe.suitableForLunch,
         suitableForDinner: recipe.suitableForDinner,
-        calories: recipe.nutrition.calories,
-        protein: recipe.nutrition.protein,
-        carbs: recipe.nutrition.carbs,
-        fat: recipe.nutrition.fat,
-        fiber: recipe.nutrition.fiber,
-        sugar: recipe.nutrition.sugar,
-        salt: recipe.nutrition.salt,
+        // Sin override: la nutrición se calcula desde los ingredientes.
         createdById,
         ingredients: {
           create: recipe.ingredients.map((ri) => {
@@ -120,7 +128,7 @@ async function seedRecipes(
     created++;
   }
   console.log(
-    `✔ Recetas: ${created} creadas, ${updated} actualizadas (nutrición) de ${RECIPES.length}.`,
+    `✔ Recetas: ${created} creadas, ${updated} con override nutricional limpiado (ahora se calcula) de ${RECIPES.length}.`,
   );
 }
 

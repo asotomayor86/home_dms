@@ -114,10 +114,42 @@ export const recipeSchema = z
 
 export type RecipeInput = z.infer<typeof recipeSchema>;
 
+// Campos nutricionales del ingrediente (por 100 g) + gramos por unidad.
+export const INGREDIENT_NUTRIENTS = [
+  { key: "kcalPer100", label: "Calorías", unit: "kcal" },
+  { key: "proteinPer100", label: "Proteínas", unit: "g" },
+  { key: "carbsPer100", label: "Carbohidratos", unit: "g" },
+  { key: "fatPer100", label: "Grasas", unit: "g" },
+  { key: "fiberPer100", label: "Fibra", unit: "g" },
+  { key: "sugarPer100", label: "Azúcares", unit: "g" },
+  { key: "saltPer100", label: "Sal", unit: "g" },
+] as const;
+
+export type IngredientNutrientKey = (typeof INGREDIENT_NUTRIENTS)[number]["key"];
+
+const ingredientNutritionShape = {
+  kcalPer100: nutrientField,
+  proteinPer100: nutrientField,
+  carbsPer100: nutrientField,
+  fatPer100: nutrientField,
+  fiberPer100: nutrientField,
+  sugarPer100: nutrientField,
+  saltPer100: nutrientField,
+  gramsPerUnit: nutrientField,
+};
+
 export const createIngredientSchema = z.object({
   name: z.string().trim().min(2, "Nombre demasiado corto").max(80),
   category: z.enum(INGREDIENT_CATEGORIES),
   defaultUnit: z.enum(UNITS),
+  ...ingredientNutritionShape,
+  offId: z.string().max(64).optional().nullable(),
 });
 
 export type CreateIngredientInput = z.infer<typeof createIngredientSchema>;
+
+export const updateIngredientSchema = createIngredientSchema.extend({
+  id: z.string().min(1),
+});
+
+export type UpdateIngredientInput = z.infer<typeof updateIngredientSchema>;

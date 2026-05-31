@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession, canManageRecipe } from "@/lib/auth-helpers";
 import { recipeSchema, type RecipeInput } from "@/lib/validation/recipe";
+import { computeNutrition } from "@/lib/nutrition-server";
 
 export type RecipeActionResult =
   | { ok: true; id: string }
@@ -34,9 +35,28 @@ export async function getRecipeView(id: string): Promise<RecipeFullView | null> 
   await requireSession();
   const r = await prisma.recipe.findUnique({
     where: { id },
-    include: { ingredients: { include: { ingredient: { select: { name: true } } } } },
+    include: {
+      ingredients: {
+        include: {
+          ingredient: {
+            select: {
+              name: true,
+              gramsPerUnit: true,
+              kcalPer100: true,
+              proteinPer100: true,
+              carbsPer100: true,
+              fatPer100: true,
+              fiberPer100: true,
+              sugarPer100: true,
+              saltPer100: true,
+            },
+          },
+        },
+      },
+    },
   });
   if (!r) return null;
+  const computed = computeNutrition(r);
   return {
     id: r.id,
     name: r.name,
@@ -50,15 +70,7 @@ export async function getRecipeView(id: string): Promise<RecipeFullView | null> 
       unit: ri.unit,
       note: ri.note,
     })),
-    nutrition: {
-      calories: r.calories,
-      protein: r.protein,
-      carbs: r.carbs,
-      fat: r.fat,
-      fiber: r.fiber,
-      sugar: r.sugar,
-      salt: r.salt,
-    },
+    nutrition: computed.values,
   };
 }
 
