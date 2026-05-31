@@ -4,12 +4,12 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
-  generateMonthPlan,
+  generateWeekPlan,
   type GenerateMode,
   type SlotScope,
 } from "@/lib/actions/planner";
 import { STRATEGY_LABELS, type StrategyId } from "@/lib/planner-strategies";
-import { monthLabel } from "@/lib/date-utils";
+import { weekLabel, parseDayKey } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,16 +39,14 @@ export function GenerateMenuDialog({
   open,
   onOpenChange,
   householdId,
-  year,
-  month,
+  weekStartKey,
   scope,
   onDone,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   householdId: string;
-  year: number;
-  month: number;
+  weekStartKey: string;
   scope: SlotScope;
   onDone: () => void;
 }) {
@@ -69,10 +67,9 @@ export function GenerateMenuDialog({
 
   function run() {
     start(async () => {
-      const res = await generateMonthPlan({
+      const res = await generateWeekPlan({
         householdId,
-        year,
-        month,
+        weekStartKey,
         mode,
         scope,
         strategy,
@@ -94,7 +91,7 @@ export function GenerateMenuDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Generar menú · {monthLabel(year, month)}</DialogTitle>
+          <DialogTitle>Generar menú · {weekLabel(parseDayKey(weekStartKey))}</DialogTitle>
           <DialogDescription>
             {step === "algorithm"
               ? "Elige el tipo de generación."
@@ -148,9 +145,9 @@ export function GenerateMenuDialog({
                 onChange={() => setMode("replace")}
               />
               <span>
-                <span className="block text-sm font-medium">Regenerar todo el mes</span>
+                <span className="block text-sm font-medium">Regenerar toda la semana</span>
                 <span className="block text-xs text-muted-foreground">
-                  Borra lo existente del ámbito y reasigna todo.
+                  Borra lo existente del ámbito y reasigna toda la semana.
                 </span>
               </span>
             </label>

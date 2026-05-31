@@ -5,7 +5,7 @@ import type { MealSlot, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireSession, isMemberOf } from "@/lib/auth-helpers";
-import { parseDayKey, utcDate, dayKey as toDayKey } from "@/lib/date-utils";
+import { parseDayKey, dayKey as toDayKey, weekDays } from "@/lib/date-utils";
 import {
   getStrategy,
   type SlotToFill,
@@ -110,17 +110,17 @@ export async function clearPlannedMeal(
 }
 
 /**
- * Comidas planificadas de un mes (year, month 0-11) para un hogar. Incluye los
- * días de relleno de semanas adyacentes para que la cuadrícula no pierda nada.
+ * Comidas planificadas de la semana (lunes→domingo) que empieza en `weekStartKey`
+ * ("YYYY-MM-DD" del lunes) para un hogar.
  */
-export async function getMonthPlan(
+export async function getWeekPlan(
   householdId: string,
-  year: number,
-  month: number,
+  weekStartKey: string,
 ): Promise<PlannedMealView[]> {
-  // Rango amplio: del día 1 del mes anterior al último del siguiente cubre el grid.
-  const from = utcDate(year, month - 1, 1);
-  const to = utcDate(year, month + 2, 0);
+  const monday = parseDayKey(weekStartKey);
+  const days = weekDays(monday);
+  const from = days[0];
+  const to = days[6];
 
   const meals = await prisma.plannedMeal.findMany({
     where: { householdId, date: { gte: from, lte: to } },
@@ -164,19 +164,19 @@ export async function getMonthPlan(
 }
 
 /**
- * Genera automáticamente el menú de un mes para el hogar usando una estrategia
- * (de momento solo "random"). `mode` decide si solo rellena huecos vacíos
- * ("fill") o regenera todo el mes ("replace"); `scope` limita a comida/cena.
+ * Genera automáticamente el menú de una semana (lunes→domingo) para el hogar
+ * usando una estrategia (de momento solo "random"). `mode` decide si solo rellena
+ * huecos vacíos ("fill") o regenera toda la semana ("replace"); `scope` limita a
+ * comida/cena. `weekStartKey` es "YYYY-MM-DD" del lunes.
  */
-export async function generateMonthPlan(params: {
+export async function generateWeekPlan(params: {
   householdId: string;
-  year: number;
-  month: number; // 0-11
+  weekStartKey: string;
   mode: GenerateMode;
   scope: SlotScope;
   strategy?: StrategyId;
 }): Promise<GenerateResult> {
-  const { householdId, year, month, mode, scope, strategy = "random" } = params;
+  const { householdId, weekStartKey, mode, scope, strategy = "random" } = params;
 
   const session = await requireSession();
   if (!(await isMemberOf(session.user.id, householdId))) {
@@ -195,25 +195,25 @@ export async function generateMonthPlan(params: {
     return { ok: false, error: "No hay recetas marcadas como disponibles para el hogar" };
   }
 
-  // Días del mes objetivo (solo el mes en sí, sin relleno de semanas).
   const slotsForScope: MealSlot[] =
     scope === "lunch" ? ["LUNCH"] : scope === "dinner" ? ["DINNER"] : ["LUNCH", "DINNER"];
 
-  const monthStart = utcDate(year, month, 1);
-  const monthEnd = utcDate(year, month + 1, 0); // último día del mes
-  const daysInMonth = monthEnd.getUTCDate();
+  // Días de la semana objetivo.
+  const days = weekDays(parseDayKey(weekStartKey));
+  const weekStart = days[0];
+  const weekEnd = days[6];
 
   const allSlots: SlotToFill[] = [];
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = toDayKey(utcDate(year, month, d));
+  for (const day of days) {
+    const key = toDayKey(day);
     for (const slot of slotsForScope) allSlots.push({ dayKey: key, slot });
   }
 
-  // Huecos ya ocupados en el mes (para modo "fill" y para el borrado en "replace").
+  // Huecos ya ocupados en la semana (para modo "fill" y para el borrado en "replace").
   const existing = await prisma.plannedMeal.findMany({
     where: {
       householdId,
-      date: { gte: monthStart, lte: monthEnd },
+      date: { gte: weekStart, lte: weekEnd },
       slot: { in: slotsForScope },
     },
     select: { date: true, slot: true },
@@ -234,14 +234,14 @@ export async function generateMonthPlan(params: {
 
   const assignments = getStrategy(strategy)({ slots: targetSlots, pool });
 
-  // Persistencia atómica: en "replace" borramos el scope del mes primero.
+  // Persistencia atómica: en "replace" borramos el scope de la semana primero.
   const ops: Prisma.PrismaPromise<unknown>[] = [];
   if (mode === "replace") {
     ops.push(
       prisma.plannedMeal.deleteMany({
         where: {
           householdId,
-          date: { gte: monthStart, lte: monthEnd },
+          date: { gte: weekStart, lte: weekEnd },
           slot: { in: slotsForScope },
         },
       }),

@@ -77,6 +77,11 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Flujo de generación en 2 pasos (algoritmo → modo)                    | Hecha  | 2026-05-31 | 2026-05-31        |
 | Totales nutricionales semanales por ración en el calendario          | Hecha  | 2026-05-31 | 2026-05-31        |
 | Desplegable de filtro de hueco más ancho                             | Hecha  | 2026-05-31 | 2026-05-31        |
+| Calendario semanal vertical (lunes arriba → domingo abajo)           | Hecha  | 2026-05-31 | 2026-05-31        |
+| Generación de menú semanal (en vez de mensual)                       | Hecha  | 2026-05-31 | 2026-05-31        |
+| Resumen nutricional de la semana debajo del calendario               | Hecha  | 2026-05-31 | 2026-05-31        |
+| Toolbar: modo en línea fija, filtro de hueco en mayúsculas           | Hecha  | 2026-05-31 | 2026-05-31        |
+| Overlay de receta sobre el calendario (cierre rápido)                | Hecha  | 2026-05-31 | 2026-05-31        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
 
 ## Próximos incrementos (pendientes de planificar)

@@ -241,16 +241,22 @@ createdAt   DateTime
   fechas a medianoche UTC (`lib/date-utils.ts`: `utcDate`, `dayKey`, `monthGrid` lunes→
   domingo) para evitar desfases de zona horaria al decidir "qué día es".
 
-- **Navegación de mes vía query params.** `/calendario?household=&year=&month=` (month 0-11)
-  es la fuente de verdad del mes mostrado; la toolbar reescribe los params y el servidor
-  recarga el plan. Filtros (hueco y texto) son estado de cliente.
+- **Vista semanal vertical.** El calendario es **semanal** (lunes arriba → domingo abajo),
+  no mensual: cabe mejor a lo ancho y deja sitio al detalle. Navegación por semanas vía
+  `/calendario?household=&week=YYYY-MM-DD` (el lunes ancla); la toolbar reescribe el param y
+  el servidor recarga (`getWeekPlan`). Filtros (hueco y texto) y modo son estado de cliente.
+  El **resumen nutricional de la semana** (por ración) aparece debajo de los días.
+
+- **Overlay de receta en el calendario.** En modo Visualizar, al hacer clic en una comida se
+  abre `RecipeOverlay` (capa fija sobre el calendario, cierre con botón/fondo/Esc) que carga
+  la receta completa on-demand (`getRecipeView`), sin salir del calendario.
 
 - **Generador de menú enchufable.** `lib/planner-strategies.ts` define un registro de
-  estrategias `(ctx) => Assignment[]` (hoy solo `random`); `generateMonthPlan` arma los
-  huecos del mes según el ámbito (comida/cena, tomado del filtro de la toolbar), aplica la
-  estrategia y persiste en una transacción. `mode`: `fill` (solo huecos vacíos) o `replace`
-  (borra el ámbito del mes y reasigna). Añadir algoritmos futuros = registrar otra estrategia,
-  sin tocar la persistencia. La marca de disponibilidad se muestra como **corazón rojo**
+  estrategias `(ctx) => Assignment[]` (hoy solo `random`); `generateWeekPlan` arma los
+  huecos de la semana según el ámbito (comida/cena, tomado del filtro de la toolbar), aplica
+  la estrategia y persiste en una transacción. `mode`: `fill` (solo huecos vacíos) o
+  `replace` (borra el ámbito de la semana y reasigna). El diálogo pregunta primero el
+  algoritmo y luego el modo. Añadir algoritmos futuros = registrar otra estrategia. La marca de disponibilidad se muestra como **corazón rojo**
   (componente `RecipeStarButton`, sobre `HouseholdRecipe`). El flujo de generación pregunta
   primero el **algoritmo** (paso 1) y luego el **modo** (paso 2).
 

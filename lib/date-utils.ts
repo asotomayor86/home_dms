@@ -46,6 +46,38 @@ export function monthGrid(year: number, month: number): Date[][] {
   return weeks;
 }
 
+/** Lunes (medianoche UTC) de la semana que contiene `date`. */
+export function weekStartMonday(date: Date): Date {
+  const offset = (date.getUTCDay() + 6) % 7; // 0 = lunes
+  return utcDate(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - offset);
+}
+
+/** Los 7 días (lunes→domingo) de la semana que empieza en `monday`. */
+export function weekDays(monday: Date): Date[] {
+  const days: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    days.push(utcDate(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + i));
+  }
+  return days;
+}
+
+/** Etiqueta de rango de semana, p. ej. "12 – 18 may 2026". */
+export function weekLabel(monday: Date): string {
+  const sunday = utcDate(
+    monday.getUTCFullYear(),
+    monday.getUTCMonth(),
+    monday.getUTCDate() + 6,
+  );
+  const fmt = (d: Date, withYear: boolean) =>
+    d.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: withYear ? "numeric" : undefined,
+      timeZone: "UTC",
+    });
+  return `${fmt(monday, false)} – ${fmt(sunday, true)}`;
+}
+
 const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -56,3 +88,12 @@ export function monthLabel(year: number, month: number): string {
 }
 
 export const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+export const WEEKDAY_LABELS_FULL = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];

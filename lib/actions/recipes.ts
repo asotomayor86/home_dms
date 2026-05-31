@@ -10,6 +10,58 @@ export type RecipeActionResult =
   | { ok: true; id: string }
   | { ok: false; error: string };
 
+export type RecipeFullView = {
+  id: string;
+  name: string;
+  description: string | null;
+  servings: number;
+  prepMinutes: number | null;
+  steps: string[];
+  ingredients: { name: string; quantity: number; unit: string; note: string | null }[];
+  nutrition: {
+    calories: number | null;
+    protein: number | null;
+    carbs: number | null;
+    fat: number | null;
+    fiber: number | null;
+    sugar: number | null;
+    salt: number | null;
+  };
+};
+
+/** Receta completa (para el overlay del calendario). null si no existe. */
+export async function getRecipeView(id: string): Promise<RecipeFullView | null> {
+  await requireSession();
+  const r = await prisma.recipe.findUnique({
+    where: { id },
+    include: { ingredients: { include: { ingredient: { select: { name: true } } } } },
+  });
+  if (!r) return null;
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    servings: r.servings,
+    prepMinutes: r.prepMinutes,
+    steps: r.steps,
+    ingredients: r.ingredients.map((ri) => ({
+      name: ri.ingredient.name,
+      quantity: ri.quantity,
+      unit: ri.unit,
+      note: ri.note,
+    })),
+    nutrition: {
+      calories: r.calories,
+      protein: r.protein,
+      carbs: r.carbs,
+      fat: r.fat,
+      fiber: r.fiber,
+      sugar: r.sugar,
+      salt: r.salt,
+    },
+  };
+}
+
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 
 function normalize(input: RecipeInput) {
