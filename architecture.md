@@ -280,6 +280,12 @@ createdAt   DateTime
   (`IngredientDialog`, crear/editar) ofrece "Buscar en OFF" → elegir candidato → autocompleta
   los campos. Densidad de líquidos ≈ 1 (aproximación). Datos OFF colaborativos: revisables.
 
+- **Sección de ingredientes (`/ingredientes`).** Catálogo gestionable (cualquier usuario):
+  tabla con buscador que muestra la nutrición por 100 g y el **factor de conversión** (cuántos
+  gramos pesa 1 unidad/diente/lata…), editable por ingrediente vía `IngredientDialog`. El
+  factor se etiqueta según la unidad (`unitNeedsGramsPerUnit`, `UNIT_SINGULAR`); las unidades
+  en g/ml no lo necesitan. Es donde se define "1 cebolla = 110 g", "1 diente de ajo = 5 g".
+
 - **Mutaciones vía Server Actions.** Las operaciones de admin son *server actions*
   (`lib/actions/*`) protegidas con `requireAdmin`, que validan con zod y revalidan las
   rutas afectadas (`revalidatePath`). La UI cliente usa `useTransition` + toasts.

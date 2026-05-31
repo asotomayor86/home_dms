@@ -87,6 +87,8 @@ Historial de tareas del proyecto. Estado: **Pendiente** / **Hecha**.
 | Integración Open Food Facts (búsqueda + autocompletar ingrediente)    | Hecha  | 2026-05-31 | 2026-05-31        |
 | Seed: valores nutricionales de los ~48 ingredientes                  | Hecha  | 2026-05-31 | 2026-05-31        |
 | Form receta: preview calculado en vivo + override plegable           | Hecha  | 2026-05-31 | 2026-05-31        |
+| Sección /ingredientes: tabla con nutrición y factores de conversión   | Hecha  | 2026-05-31 | 2026-05-31        |
+| Etiqueta de factor de conversión según unidad (gramos por diente…)    | Hecha  | 2026-05-31 | 2026-05-31        |
 | Actualizar architecture.md y backlog.md                              | Hecha  | 2026-05-31 | 2026-05-31        |
 
 ## Próximos incrementos (pendientes de planificar)

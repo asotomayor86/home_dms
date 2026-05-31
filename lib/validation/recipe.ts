@@ -46,6 +46,30 @@ export const UNIT_LABELS: Record<(typeof UNITS)[number], string> = {
   AL_GUSTO: "al gusto",
 };
 
+// Unidades que se miden directamente en peso/volumen (no necesitan gramsPerUnit).
+export const DIRECT_UNITS = ["GRAMO", "KILOGRAMO", "MILILITRO", "LITRO"] as const;
+
+/** ¿La unidad necesita un factor "gramos por unidad" para poder calcular? */
+export function unitNeedsGramsPerUnit(unit: string): boolean {
+  return !DIRECT_UNITS.includes(unit as (typeof DIRECT_UNITS)[number]) && unit !== "AL_GUSTO";
+}
+
+/** Etiqueta singular para el factor de conversión, p. ej. "Gramos por diente". */
+export const UNIT_SINGULAR: Record<(typeof UNITS)[number], string> = {
+  GRAMO: "gramo",
+  KILOGRAMO: "kilogramo",
+  MILILITRO: "mililitro",
+  LITRO: "litro",
+  UNIDAD: "unidad",
+  CUCHARADA: "cucharada",
+  CUCHARADITA: "cucharadita",
+  PIZCA: "pizca",
+  DIENTE: "diente",
+  LATA: "lata",
+  MANOJO: "manojo",
+  AL_GUSTO: "porción",
+};
+
 export const CATEGORY_LABELS: Record<(typeof INGREDIENT_CATEGORIES)[number], string> = {
   VERDURA: "Verdura",
   FRUTA: "Fruta",

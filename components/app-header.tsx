@@ -46,6 +46,12 @@ export function AppHeader({
             Recetas
           </Link>
           <Link
+            href="/ingredientes"
+            className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Ingredientes
+          </Link>
+          <Link
             href="/calendario"
             className="eyebrow text-muted-foreground transition-colors hover:text-foreground"
           >

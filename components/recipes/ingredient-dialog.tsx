@@ -15,7 +15,9 @@ import {
   CATEGORY_LABELS,
   UNITS,
   UNIT_LABELS,
+  UNIT_SINGULAR,
   INGREDIENT_NUTRIENTS,
+  unitNeedsGramsPerUnit,
   type IngredientNutrientKey,
 } from "@/lib/validation/recipe";
 import { Button } from "@/components/ui/button";
@@ -295,7 +297,7 @@ export function IngredientDialog({
               ))}
               <div className="flex flex-col gap-1">
                 <Label htmlFor="ing-gramsPerUnit" className="text-xs">
-                  Gramos / unidad
+                  Gramos por {UNIT_SINGULAR[unit]}
                 </Label>
                 <Input
                   id="ing-gramsPerUnit"
@@ -309,10 +311,18 @@ export function IngredientDialog({
                 />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              &quot;Gramos / unidad&quot; es el peso de 1 unidad base (p. ej. 1 cebolla ≈ 110 g),
-              necesario para calcular recetas medidas por unidad, diente, lata o cucharada.
-            </p>
+            {unitNeedsGramsPerUnit(unit) ? (
+              <p className="text-xs text-muted-foreground">
+                Factor de conversión: cuántos gramos pesa 1 {UNIT_SINGULAR[unit]} (p. ej. 1
+                cebolla ≈ 110 g, 1 diente de ajo ≈ 5 g). Necesario para calcular la nutrición
+                de recetas medidas en «{UNIT_LABELS[unit]}».
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Esta unidad ya se mide en peso/volumen, así que el factor de conversión no es
+                imprescindible para el cálculo.
+              </p>
+            )}
           </div>
         </div>
 
