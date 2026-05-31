@@ -28,10 +28,10 @@ export function SectionWatermark() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none"
+      className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center overflow-hidden select-none"
     >
       <span
-        className="absolute bottom-[0.04em] -left-[0.04em] origin-bottom-left font-handwriting leading-none whitespace-nowrap text-foreground/[0.10]"
+        className="font-handwriting leading-none whitespace-nowrap text-foreground/[0.10]"
         style={{
           fontSize: "clamp(14rem, 44vw, 42rem)",
           // Ángulo negativo = giro antihorario → "levanta" la parte trasera del texto.
