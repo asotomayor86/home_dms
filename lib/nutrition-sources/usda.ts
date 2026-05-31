@@ -6,9 +6,10 @@ import {
 } from "./types";
 
 // FoodData Central (USDA). Requiere USDA_API_KEY (gratuita). En inglés.
-// Nutrientes por número estándar de FDC:
-//   1008 Energy (kcal), 1003 Protein, 1005 Carbs, 1004 Fat, 1079 Fiber,
-//   2000 Sugars, 1093 Sodium (mg) → sal = sodio×2.5/1000 (g).
+// Los números de nutriente varían entre conjuntos de datos: SR Legacy usa los
+// históricos (208 energía, 203 proteína, 205 carbos, 204 grasa, 291 fibra,
+// 269 azúcar, 307 sodio); otros usan los nuevos (1008/1003/1005/1004/1079/2000/
+// 1093). Aceptamos ambos. Sal = sodio(mg) × 2.5 / 1000 (g).
 type FDCNutrient = { nutrientNumber?: string; value?: number };
 type FDCFood = {
   fdcId?: number;
@@ -17,9 +18,22 @@ type FDCFood = {
   foodNutrients?: FDCNutrient[];
 };
 
-function byNumber(nutrients: FDCNutrient[], number: string): number | null {
-  const n = nutrients.find((x) => x.nutrientNumber === number);
-  return n ? num(n.value) : null;
+const NUM = {
+  energy: ["208", "1008"],
+  protein: ["203", "1003"],
+  carbs: ["205", "1005"],
+  fat: ["204", "1004"],
+  fiber: ["291", "1079"],
+  sugar: ["269", "2000"],
+  sodium: ["307", "1093"],
+};
+
+function byNumbers(nutrients: FDCNutrient[], numbers: string[]): number | null {
+  for (const code of numbers) {
+    const n = nutrients.find((x) => x.nutrientNumber === code);
+    if (n) return num(n.value);
+  }
+  return null;
 }
 
 export const usdaSource: NutritionSource = {
@@ -35,7 +49,9 @@ export const usdaSource: NutritionSource = {
       "https://api.nal.usda.gov/fdc/v1/foods/search?" +
       new URLSearchParams({
         query: term,
-        pageSize: "6",
+        pageSize: "8",
+        // Prioriza alimentos genéricos/de referencia (frescos) sobre productos de marca.
+        dataType: "Foundation,SR Legacy",
         api_key: key,
       }).toString();
 
@@ -46,18 +62,18 @@ export const usdaSource: NutritionSource = {
       .filter((f) => f.fdcId && f.description)
       .map<NutritionCandidate>((f) => {
         const nut = f.foodNutrients ?? [];
-        const sodiumMg = byNumber(nut, "1093");
+        const sodiumMg = byNumbers(nut, NUM.sodium);
         return {
           sourceId: "usda",
           externalId: String(f.fdcId),
           name: f.description as string,
           brand: f.brandOwner ?? null,
-          kcalPer100: byNumber(nut, "1008"),
-          proteinPer100: byNumber(nut, "1003"),
-          carbsPer100: byNumber(nut, "1005"),
-          fatPer100: byNumber(nut, "1004"),
-          fiberPer100: byNumber(nut, "1079"),
-          sugarPer100: byNumber(nut, "2000"),
+          kcalPer100: byNumbers(nut, NUM.energy),
+          proteinPer100: byNumbers(nut, NUM.protein),
+          carbsPer100: byNumbers(nut, NUM.carbs),
+          fatPer100: byNumbers(nut, NUM.fat),
+          fiberPer100: byNumbers(nut, NUM.fiber),
+          sugarPer100: byNumbers(nut, NUM.sugar),
           saltPer100: sodiumMg != null ? num((sodiumMg * 2.5) / 1000) : null,
           servingGrams: null,
         };
