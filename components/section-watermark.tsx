@@ -2,16 +2,17 @@
 
 import { usePathname } from "next/navigation";
 
-// Texto de la marca de agua según la sección. Sin imágenes: es texto real
-// renderizado con la fuente manuscrita (Caveat).
-function watermarkFor(pathname: string): string {
-  if (pathname.startsWith("/login")) return "Hola";
-  if (pathname.startsWith("/change-password")) return "Clave";
-  if (pathname.startsWith("/recipes/seleccion")) return "Menú";
-  if (pathname.startsWith("/recipes")) return "Recetas";
-  if (pathname.startsWith("/admin")) return "Admin";
-  if (pathname.startsWith("/dashboard")) return "Inicio";
-  return "Home";
+// Texto de la marca de agua + inclinación por sección. Sin imágenes: es texto
+// real renderizado con la fuente manuscrita (Caveat). El ángulo (en grados)
+// "levanta la parte trasera" del texto y varía entre 10° y 25° según la sección.
+function watermarkFor(pathname: string): { text: string; angle: number } {
+  if (pathname.startsWith("/login")) return { text: "Hola", angle: 18 };
+  if (pathname.startsWith("/change-password")) return { text: "Clave", angle: 14 };
+  if (pathname.startsWith("/recipes/seleccion")) return { text: "Menú", angle: 25 };
+  if (pathname.startsWith("/recipes")) return { text: "Recetas", angle: 12 };
+  if (pathname.startsWith("/admin")) return { text: "Admin", angle: 22 };
+  if (pathname.startsWith("/dashboard")) return { text: "Inicio", angle: 16 };
+  return { text: "Home", angle: 15 };
 }
 
 /**
@@ -22,7 +23,7 @@ function watermarkFor(pathname: string): string {
  */
 export function SectionWatermark() {
   const pathname = usePathname();
-  const text = watermarkFor(pathname);
+  const { text, angle } = watermarkFor(pathname);
 
   return (
     <div
@@ -30,8 +31,12 @@ export function SectionWatermark() {
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none"
     >
       <span
-        className="absolute -bottom-[0.28em] -left-[0.06em] font-handwriting leading-none whitespace-nowrap text-foreground/[0.055]"
-        style={{ fontSize: "clamp(11rem, 34vw, 30rem)" }}
+        className="absolute bottom-[0.04em] -left-[0.04em] origin-bottom-left font-handwriting leading-none whitespace-nowrap text-foreground/[0.10]"
+        style={{
+          fontSize: "clamp(14rem, 44vw, 42rem)",
+          // Ángulo negativo = giro antihorario → "levanta" la parte trasera del texto.
+          transform: `rotate(-${angle}deg)`,
+        }}
       >
         {text}
       </span>
