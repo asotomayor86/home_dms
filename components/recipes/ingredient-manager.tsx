@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 import { Pencil, Plus } from "lucide-react";
 
 import type { IngredientOption } from "@/lib/actions/ingredients";
-import {
-  CATEGORY_LABELS,
-  UNIT_LABELS,
-  UNIT_SINGULAR,
-  unitNeedsGramsPerUnit,
-} from "@/lib/validation/recipe";
+import { CATEGORY_LABELS } from "@/lib/validation/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+
+// Etiqueta legible de la fuente de los macros. Vacío (—) = valores del seed.
+const SOURCE_LABELS: Record<string, string> = {
+  off: "Open Food Facts",
+  usda: "USDA",
+  mercadona: "Mercadona",
+};
 import {
   Table,
   TableBody,
@@ -53,7 +55,7 @@ export function IngredientManager({ ingredients }: { ingredients: IngredientOpti
         </Button>
       </div>
 
-      <div className="overflow-x-auto border">
+      <div className="overflow-x-auto border bg-background">
         <Table>
           <TableHeader>
             <TableRow>
@@ -66,7 +68,7 @@ export function IngredientManager({ ingredients }: { ingredients: IngredientOpti
               <TableHead className="text-right">Fibra</TableHead>
               <TableHead className="text-right">Azúc.</TableHead>
               <TableHead className="text-right">Sal</TableHead>
-              <TableHead>Conversión</TableHead>
+              <TableHead>Fuente</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -79,7 +81,6 @@ export function IngredientManager({ ingredients }: { ingredients: IngredientOpti
               </TableRow>
             ) : (
               filtered.map((ing) => {
-                const needsFactor = unitNeedsGramsPerUnit(ing.defaultUnit);
                 return (
                   <TableRow key={ing.id}>
                     <TableCell className="font-medium">{ing.name}</TableCell>
@@ -104,19 +105,10 @@ export function IngredientManager({ ingredients }: { ingredients: IngredientOpti
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{fmt(ing.saltPer100)}</TableCell>
                     <TableCell className="whitespace-nowrap text-xs">
-                      {needsFactor ? (
-                        ing.gramsPerUnit != null ? (
-                          <span>
-                            1 {UNIT_SINGULAR[ing.defaultUnit as keyof typeof UNIT_SINGULAR]} ={" "}
-                            {fmt(ing.gramsPerUnit)} g
-                          </span>
-                        ) : (
-                          <Badge variant="outline">falta factor</Badge>
-                        )
+                      {ing.sourceId ? (
+                        <Badge variant="secondary">{SOURCE_LABELS[ing.sourceId] ?? ing.sourceId.toUpperCase()}</Badge>
                       ) : (
-                        <span className="text-muted-foreground">
-                          {UNIT_LABELS[ing.defaultUnit as keyof typeof UNIT_LABELS]}
-                        </span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -138,9 +130,10 @@ export function IngredientManager({ ingredients }: { ingredients: IngredientOpti
       </div>
 
       <p className="text-xs text-muted-foreground">
-        La columna «Conversión» indica cuántos gramos pesa 1 unidad del ingrediente (cebolla,
-        diente de ajo, lata…), necesario para calcular la nutrición de las recetas. Los
-        ingredientes medidos en g/ml no la necesitan.
+        La columna «Fuente» indica de dónde provienen los valores nutricionales: vacío (—) si
+        son valores de referencia iniciales, o la fuente (Open Food Facts, USDA…) si se
+        importaron de ahí. Edita un ingrediente para ver y ajustar sus macros y el factor de
+        conversión (gramos por unidad).
       </p>
 
       {/* Crear */}
