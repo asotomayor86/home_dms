@@ -259,15 +259,24 @@ export function IngredientDialog({
                     key={`${c.sourceId}-${c.externalId}`}
                     type="button"
                     onClick={() => applyCandidate(c)}
-                    className="flex items-center justify-between gap-2 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent"
+                    className="flex flex-col gap-0.5 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent"
                   >
-                    <span className="truncate">
-                      {c.name}
-                      {c.brand && <span className="text-muted-foreground"> · {c.brand}</span>}
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        {c.name}
+                        {c.brand && (
+                          <span className="text-muted-foreground"> · {c.brand}</span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {c.kcalPer100 != null ? `${c.kcalPer100} kcal/100g` : "sin macros"}
+                      </span>
                     </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {c.kcalPer100 != null ? `${c.kcalPer100} kcal` : "sin macros"}
-                    </span>
+                    {c.info && (
+                      <span className="line-clamp-2 text-xs text-muted-foreground">
+                        {c.info}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

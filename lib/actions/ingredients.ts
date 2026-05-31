@@ -112,6 +112,8 @@ export async function createIngredient(
         ...nutritionData(parsed.data),
       },
     });
+    revalidatePath("/ingredientes");
+    revalidatePath("/recipes");
     return { ok: true, ingredient: toOption(row) };
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
@@ -141,6 +143,7 @@ export async function updateIngredient(
         ...nutritionData(parsed.data),
       },
     });
+    revalidatePath("/ingredientes");
     revalidatePath("/recipes");
     return { ok: true, ingredient: toOption(row) };
   } catch (e) {

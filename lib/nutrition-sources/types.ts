@@ -17,6 +17,8 @@ export type NutritionCandidate = {
   saltPer100: number | null;
   /** Peso de una ración si la fuente lo indica (g); pista para gramsPerUnit. */
   servingGrams: number | null;
+  /** Texto informativo (p. ej. ingredientes/alérgenos) cuando la fuente no da macros. */
+  info?: string | null;
 };
 
 export type NutritionSource = {
