@@ -276,7 +276,9 @@ export function MealCalendar({
                       <span className="eyebrow w-16 shrink-0 text-muted-foreground">
                         {SLOT_LABEL[slot]}
                       </span>
-                      <span className="truncate">{meal ? meal.recipeName : "— sin asignar"}</span>
+                      <span className="truncate uppercase">
+                        {meal ? meal.recipeName : "— sin asignar"}
+                      </span>
                     </button>
                   );
                 })}
@@ -296,7 +298,7 @@ export function MealCalendar({
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
             {NUTRIENTS.map((n) => (
-              <div key={n.key} className="flex flex-col">
+              <div key={n.key} className="flex flex-col items-center text-center">
                 <span className="eyebrow text-muted-foreground">{n.label}</span>
                 <span className="text-lg font-semibold tabular-nums">
                   {formatNutrient(n.key, weekTotals[n.key])}
